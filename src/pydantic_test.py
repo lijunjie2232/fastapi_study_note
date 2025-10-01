@@ -5,7 +5,7 @@ from pprint import pprint as print
 class TestModel(BaseModel):
     id: int
     name: str
-    age: int
+    age: int = 0  # デフォルト値
 
 
 class MessageModel(BaseModel):
@@ -65,3 +65,21 @@ if __name__ == "__main__":
     # TestModel(id=2, name='Bob', age=25)
     print(TestModel.model_validate_json('{"id": "2", "name": "Bob", "age": "25"}'))
     # TestModel(id=2, name='Bob', age=25)
+
+    test_model3 = TestModel(
+        id=3,
+        name="Charlie",
+    ) # age=0 がデフォルト値のまま
+    print_test_model(test_model3)
+    # id=3 name='Charlie' age=0
+    print(test_model3.model_dump())
+    # {'id': 3, 'name': 'Charlie', 'age': 0}
+    print(test_model3.model_dump(exclude_defaults=True))
+    # {'id': 3, 'name': 'Charlie'}
+    print(test_model3.model_dump(exclude_unset=True))
+    # {'id': 3, 'name': 'Charlie'}
+    print(test_model3.model_dump(exclude={"age"}))
+    # {'id': 3, 'name': 'Charlie'}
+    print(test_model3.model_dump(include={"id", "age"}))
+    # {'age': 0, 'id': 3}
+    
