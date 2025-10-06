@@ -123,7 +123,7 @@ if __name__ == "__main__":
 ```
 
 
-## fastapi request parameters
+## fastapi request and response
 
 example code: [requests_param.py](src/requests_param.py)
 
@@ -230,3 +230,59 @@ async def path_params_check(
 #### `Path`
 `Path` は `Query` と同様に使用します。
 
+### request body
+
+1. **Form Data**
+   - ファイルアップロード時に使用
+   - 例：ユーザー登録フォームでプロフィール画像をアップロードする場合
+   ```
+   POST /upload
+   Content-Type: multipart/form-data
+   
+   name: "田中太郎"
+   email: "tanaka@example.com"
+   profile_image: [バイナリデータ]
+   ```
+
+   - multipart/form-data 形式では、ファイルを送信する際に特別な区切り文字（boundary / バウンダリ）が使用されます。
+    ```
+    POST /upload HTTP/1.1
+    Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+    ------WebKitFormBoundary7MA4YWxkTrZu0gW
+    Content-Disposition: form-data; name="username"
+
+    tanakatarou
+    ------WebKitFormBoundary7MA4YWxkTrZu0gW
+    Content-Disposition: form-data; name="profile"; filename="profile.jpg"
+    Content-Type: image/jpeg
+
+    [バイナリデータ]
+    ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+    ```
+    
+
+2. **RAW**
+   - API間通信でよく使われる（特にJSON形式）
+   - 例：ユーザー情報をJSON形式で送信する場合
+   ```
+   POST /api/users
+   Content-Type: application/json
+   
+   {
+     "name": "山田花子",
+     "age": 28,
+     "email": "yamada@example.com"
+   }
+   ```
+
+3. **x-www-form-urlencoded**
+   - 従来のHTMLフォーム送信で使用
+   - 形式は: `key=value`
+   - 例：ログイン情報などを送信する場合
+   ```
+   POST /login
+   Content-Type: application/x-www-form-urlencoded
+   
+   username=yamada&password=mypassword123
+   ```
