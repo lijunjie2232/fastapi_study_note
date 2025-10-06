@@ -9,6 +9,8 @@
 
 ## pydantic
 
+example code: [pydantic_test.py](src/pydantic_test.py)
+
 pydanticは、Pythonの型チェックを行うライブラリです。
 
 ```python
@@ -97,3 +99,5 @@ print(test_model3.model_dump(include={"id", "age"}))
 ```
 
 ## スタート
+
+example code: [fastapi_start.py](src/fastapi_start.py)
