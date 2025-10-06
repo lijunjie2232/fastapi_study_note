@@ -360,13 +360,25 @@ async def form_params(
 JSON Data を受けるために、pydantic Model を使うべき
 
 ```python
-from pydantic import BaseModel
-
 # raw(json)
 class RegisterInfo(BaseModel):
     usename: str
     email: str
-    password: str
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=50,
+    )
+
+    @field_validator("password")
+    def password_must_meet_requirements(cls, v):
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("Password must contain at least one punctuation mark")
+        return v
 
 
 @app.post("/raw")
