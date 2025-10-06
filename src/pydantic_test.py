@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pprint import pprint as print
 
 
@@ -12,6 +12,13 @@ class MessageModel(BaseModel):
     message: str
     success: bool
     data: dict
+
+
+class ValidatedModel(BaseModel):
+    id: int
+    name: str
+    age: int = Field(0, description="age")
+    email: str = Field(..., pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 
 def print_test_model(model: TestModel):
@@ -82,3 +89,10 @@ if __name__ == "__main__":
     # {'id': 3, 'name': 'Charlie'}
     print(test_model3.model_dump(include={"id", "age"}))
     # {'age': 0, 'id': 3}
+    test_model4 = ValidatedModel(
+        id=4,
+        name="David",
+        age=30,
+        email="123@321.123",
+    )
+    print(test_model4.model_dump())

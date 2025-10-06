@@ -98,6 +98,22 @@ print(test_model3.model_dump(include={"id", "age"}))
 # {'age': 0, 'id': 3}
 ```
 
+### pydantic Field
+
+pydanticのFieldクラスを使って、Pydanticモデルのフィールドを設定することができます。
+
+```python
+from pydantic import BaseModel, Field
+
+
+class ValidatedModel(BaseModel):
+    id: int
+    name: str
+    age: int = Field(0, description="age")
+    email: str = Field(..., pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+```
+
+
 ## スタート
 
 example code: [fastapi_start.py](src/fastapi_start.py)
