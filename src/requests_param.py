@@ -1,8 +1,10 @@
+from typing import Annotated
 from fastapi import (
     FastAPI,
     Query,
     Path,
     Form,
+    Cookie,
 )
 
 from pydantic import BaseModel, Field, field_validator
@@ -175,6 +177,28 @@ async def raw(register_info: RegisterInfo):
         "code": 200,
         "data": {
             "register_info": register_info,
+        },
+    }
+
+
+# cookie params
+@app.get("/cookie_params")
+async def cookie_params(
+    token: Annotated[str | None, Cookie(...)] = None,
+):
+    """_summary_
+
+    Args:
+        token (str): token
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "token": token,
         },
     }
 

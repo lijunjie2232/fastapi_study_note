@@ -399,3 +399,31 @@ async def raw(register_info: RegisterInfo):
         },
     }
 ```
+
+### request cookies
+
+request cookies は、`GET`、`POST`、`PUT`、`PATCH`、`DELETE` メソッドで使用します。
+クッキーは、ブラウザーからサーバーに送信されるデータです。
+
+```python
+# cookie params
+@app.get("/cookie_params")
+async def cookie_params(
+    token: Annotated[str | None, Cookie(...)] = None,
+):
+    """_summary_
+
+    Args:
+        token (str): token
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "token": token,
+        },
+    }
+```
