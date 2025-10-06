@@ -5,6 +5,8 @@ from fastapi import (
     Form,
 )
 
+from pydantic import BaseModel
+
 app = FastAPI()
 
 
@@ -132,6 +134,34 @@ async def form_params(
         "data": {
             "name": name,
             "age": age,
+        },
+    }
+
+
+# raw(json)
+
+
+class RegisterInfo(BaseModel):
+    usename: str
+    email: str
+    password: str
+
+
+@app.post("/raw")
+async def raw(register_info: RegisterInfo):
+    """_summary_
+
+    Args:
+        register_info (RegisterInfo): register_info
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "register_info": register_info,
         },
     }
 

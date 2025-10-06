@@ -232,6 +232,10 @@ async def path_params_check(
 
 ### request body
 
+request body は、`POST`、`PUT`、`PATCH` メソッドで使用します。
+
+<font color="red">**注意</font>： "Request with GET/HEAD method cannot have body. "**
+
 1. **Form Data**
    - ファイルアップロード時に使用
    - 例：ユーザー登録フォームでプロフィール画像をアップロードする場合
@@ -308,4 +312,46 @@ async def form_params(
     pass
 ```
 
-- `Form` は `Query` と同様に使用します。
+- `Form` は `Query` と同様に使用しますが：
+    ```python
+    # Query
+    @app.get("/query_params")
+    async def query_params(name: str, age: int | None = 0): pass
+
+    # Form
+    @app.post("/form_params")
+    async def form_params(name: str = Form(...), age: int = Form(...)): pass
+    ```
+
+#### RAW JSON
+
+JSON Data を受けるために、pydantic Model を使うべき
+
+```python
+from pydantic import BaseModel
+
+# raw(json)
+class RegisterInfo(BaseModel):
+    usename: str
+    email: str
+    password: str
+
+
+@app.post("/raw")
+async def raw(register_info: RegisterInfo):
+    """_summary_
+
+    Args:
+        register_info (RegisterInfo): register_info
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "register_info": register_info,
+        },
+    }
+```
