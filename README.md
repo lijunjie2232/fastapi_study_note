@@ -123,3 +123,26 @@ if __name__ == "__main__":
 ```
 
 
+## fastapi request parameters
+
+example code: [requests_param.py](src/requests_param.py)
+
+### query parameters
+```python
+@app.get("/query_params")
+async def query_params(name: str, age: int | None = 0): 
+    # ここでnameとageを取得します。
+    # ageはデフォルト値として0を設定しています。
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "name": name,
+            "age": age,
+        },
+    }
+```
+
+#### デフォルト値の設定：
+- `def query_params(age: int | None = 0)`
+- `def query_size(size: Union[int, None] = 10)`

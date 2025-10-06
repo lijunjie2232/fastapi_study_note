@@ -69,7 +69,7 @@ if __name__ == "__main__":
     test_model3 = TestModel(
         id=3,
         name="Charlie",
-    ) # age=0 がデフォルト値のまま
+    )  # age=0 がデフォルト値のまま
     print_test_model(test_model3)
     # id=3 name='Charlie' age=0
     print(test_model3.model_dump())
@@ -82,4 +82,3 @@ if __name__ == "__main__":
     # {'id': 3, 'name': 'Charlie'}
     print(test_model3.model_dump(include={"id", "age"}))
     # {'age': 0, 'id': 3}
-    
