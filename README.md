@@ -128,6 +128,8 @@ if __name__ == "__main__":
 example code: [requests_param.py](src/requests_param.py)
 
 ### query parameters
+
+#### example
 ```python
 @app.get("/query_params")
 async def query_params(name: str, age: int | None = 0): 
@@ -146,3 +148,42 @@ async def query_params(name: str, age: int | None = 0):
 #### デフォルト値の設定：
 - `def query_params(age: int | None = 0)`
 - `def query_size(size: Union[int, None] = 10)`
+
+### query check
+
+use `Query` class to check query parameters.
+
+#### example
+```python
+async def query_check(
+    size: int = Query(..., gt=0, lt=10),
+    name: str = Query(..., min_length=1, max_length=10),
+    email: str = Query(..., regex="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"),
+):
+    return {}
+```
+
+#### `Query`
+```python
+from fastapi import Query
+
+query = Query(
+    default, # デフォルト値
+    alias=None, # 別名
+    title=None, # タイトル
+    description=None, # 説明
+    required=True, # 必須かどうか
+    deprecated=None, # 廃止かどうか
+    ge=None, # [Number] 最小値 (inclusive)
+    gt=None, # [Number] 最小値（ exclusive ）
+    le=None, # [Number] 最大値 (inclusive)
+    lt=None, # [Number] 最大値 (exclusive)
+    multiple_of=None, # 倍数
+    min_length=None, # [str] 最小文字数
+    max_length=None, # [str] 最大文字数
+    regex=None, # [str] 正規表現
+    encoding=None, # [str] エンコーディング
+    *args,
+    **kwargs,
+)
+```
