@@ -1,4 +1,9 @@
-from fastapi import FastAPI, Query, Path
+from fastapi import (
+    FastAPI,
+    Query,
+    Path,
+    Form,
+)
 
 app = FastAPI()
 
@@ -92,6 +97,41 @@ async def path_params_check(
         "code": 200,
         "data": {
             "page_num": page_num,
+        },
+    }
+
+
+# form params
+@app.post("/form_params")
+async def form_params(
+    name: str = Form(
+        ...,
+        description="name",
+        min_length=1,
+        max_length=10,
+    ),
+    age: int = Form(
+        ...,
+        description="age",
+        gt=0,
+        lt=10,
+    ),
+):
+    """_summary_
+
+    Args:
+        name (str): name
+        age (int): age
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "name": name,
+            "age": age,
         },
     }
 

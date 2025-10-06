@@ -286,3 +286,26 @@ async def path_params_check(
    
    username=yamada&password=mypassword123
    ```
+
+#### Form
+
+```python
+@app.post("/form_params")
+async def form_params(
+    name: str = Form(
+        ...,
+        description="name",
+        min_length=1,
+        max_length=10,
+    ),
+    age: int = Form(
+        ...,
+        description="age",
+        gt=0,
+        lt=10,
+    ),
+):
+    pass
+```
+
+- `Form` は `Query` と同様に使用します。
