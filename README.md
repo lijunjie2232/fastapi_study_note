@@ -216,4 +216,15 @@ async def path_params(
 ```
 
 #### path parameters check
+##### example
+```python
+@app.get("/path_params_check/{page_num}")
+async def path_params_check(
+    page_num: int = Path(..., gt=0, lt=10),
+):
+    pass
+```
+
+#### `Path`
+`Path` は `Query` と同様に使用します。
 
