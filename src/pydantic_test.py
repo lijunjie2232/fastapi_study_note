@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pprint import pprint as print
+import re
 
 
 class TestModel(BaseModel):
@@ -19,6 +20,12 @@ class ValidatedModel(BaseModel):
     name: str
     age: int = Field(0, description="age")
     email: str = Field(..., pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+
+    @field_validator("email")
+    def email_must_meet_requirements(cls, v):
+        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", v):
+            raise ValueError("email must meet requirements")
+        return v
 
 
 def print_test_model(model: TestModel):

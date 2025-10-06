@@ -103,14 +103,30 @@ print(test_model3.model_dump(include={"id", "age"}))
 pydanticのFieldクラスを使って、Pydanticモデルのフィールドを設定することができます。
 
 ```python
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+import re
 
 
-class ValidatedModel(BaseModel):
-    id: int
-    name: str
-    age: int = Field(0, description="age")
-    email: str = Field(..., pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+class RegisterInfo(BaseModel):
+    usename: str
+    email: str
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=50,
+        pattern=r"^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).*$",
+    )
+
+    @field_validator("password")
+    def password_must_meet_requirements(cls, v):
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("Password must contain at least one punctuation mark")
+        return v
+
 ```
 
 
