@@ -149,11 +149,11 @@ async def query_params(name: str, age: int | None = 0):
 - `def query_params(age: int | None = 0)`
 - `def query_size(size: Union[int, None] = 10)`
 
-### query check
+#### query check
 
 use `Query` class to check query parameters.
 
-#### example
+##### example
 ```python
 async def query_check(
     size: int = Query(..., gt=0, lt=10),
@@ -163,7 +163,7 @@ async def query_check(
     return {}
 ```
 
-#### `Query`
+##### `Query`
 ```python
 from fastapi import Query
 
@@ -181,9 +181,39 @@ query = Query(
     multiple_of=None, # 倍数
     min_length=None, # [str] 最小文字数
     max_length=None, # [str] 最大文字数
-    regex=None, # [str] 正規表現
+    pattern=None, # [str] 正規表現 (regexは廃止)
     encoding=None, # [str] エンコーディング
     *args,
     **kwargs,
 )
 ```
+
+### path parameters
+#### example
+```python
+@app.get("/path_params/{page_num}")
+# ここで、page_numを取得します。
+async def path_params(
+    page_num: int, # ここで、page_numはpathから渡す
+    page_nums: int　# ここで、page_numsはクエリーから渡す（パスのパラメターには同じ名前のはない）
+)
+    """_summary_
+
+    Args:
+        page_num (int): page_num
+        page_nums (int): page_nums
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "page_num": page_num,
+        },
+    }
+```
+
+#### path parameters check
+
