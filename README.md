@@ -188,6 +188,8 @@ query = Query(
 )
 ```
 
+- もし、デフォルト値を設定しないばあしは、必ず先ずは`...`で指定します：`Query(..., gt=0, lt=10)`
+
 ### path parameters
 #### example
 ```python
