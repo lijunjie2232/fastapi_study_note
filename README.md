@@ -101,3 +101,25 @@ print(test_model3.model_dump(include={"id", "age"}))
 ## スタート
 
 example code: [fastapi_start.py](src/fastapi_start.py)
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI() # ここでアプリケーションを初期化します。
+
+
+@app.get("/") # ルートパスにアクセスしたときに実行される関数を定義します。
+def root():
+    return {"message": "Hello World"} # ここで返す値を指定します。
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # ここでサーバーを起動します。
+    # 0.0.0.0 はすべてのインターフェースを指します。
+    # 8000 はポート番号です。
+    # これで、http://localhost:8000/ にアクセスすると、Hello World が表示されます。
+
+```
+
+
