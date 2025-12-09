@@ -427,3 +427,32 @@ async def cookie_params(
         },
     }
 ```
+
+### request headers
+
+- headers は、ブラウザーからサーバーに送信されるデータです。
+
+- first use `from fastapi import Header` to import `Header`
+
+```python
+# header params
+@app.get("/header_params")
+async def header_params(
+    bearer: Annotated[str | None, Header(...)] = None,
+):
+    """_summary_
+
+    Args:
+        bearer (str): token
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "token": bearer,
+        },
+    }
+```

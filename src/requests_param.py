@@ -5,6 +5,7 @@ from fastapi import (
     Path,
     Form,
     Cookie,
+    Header,
 )
 
 from pydantic import BaseModel, Field, field_validator
@@ -38,9 +39,20 @@ async def query_params(name: str, age: int | None = 0):
 # query check
 @app.get("/query_check")
 async def query_check(
-    size: int = Query(..., gt=0, lt=10),
-    name: str = Query(..., min_length=1, max_length=10),
-    email: str = Query(..., pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"),
+    size: int = Query(
+        ...,
+        gt=0,
+        lt=10,
+    ),
+    name: str = Query(
+        ...,
+        min_length=1,
+        max_length=10,
+    ),
+    email: str = Query(
+        ...,
+        pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+    ),
 ):
     """_summary_
 
@@ -199,6 +211,28 @@ async def cookie_params(
         "code": 200,
         "data": {
             "token": token,
+        },
+    }
+
+
+# header params
+@app.get("/header_params")
+async def header_params(
+    bearer: Annotated[str | None, Header(...)] = None,
+):
+    """_summary_
+
+    Args:
+        bearer (str): token
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "token": bearer,
         },
     }
 
