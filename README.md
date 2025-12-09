@@ -456,3 +456,31 @@ async def header_params(
         },
     }
 ```
+
+### request object
+
+```python
+# request object
+@app.get("/request_object/{path_id}")
+async def request_object(request: Request, path_id: int = 0):
+    """_summary_
+
+    Args:
+        request (Request): request
+
+    Returns:
+        (dict)
+    """
+    # print request info
+    print(request.headers)
+    print(request.cookies)
+    print(request.query_params)
+    print(request.path_params)
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "token": request.headers.get("bearer"),
+        },
+    }
+```
