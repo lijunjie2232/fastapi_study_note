@@ -1,5 +1,5 @@
 import re
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import (
     Cookie,
@@ -368,6 +368,12 @@ async def file_upload_and_verify(
                 "file type": file.content_type,
             },
         }
+
+
+# items test
+@app.get("/items/")
+def get_items(ids: List[int] = Query([])):
+    return {"ids": ids}
 
 
 if __name__ == "__main__":
