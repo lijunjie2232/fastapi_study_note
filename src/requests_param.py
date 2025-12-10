@@ -9,6 +9,7 @@ from fastapi import (
     Request,
     File,
     UploadFile,
+    HTTPException,
 )
 
 from pydantic import BaseModel, Field, field_validator
