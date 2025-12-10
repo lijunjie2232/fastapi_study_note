@@ -7,6 +7,8 @@ from fastapi import (
     Cookie,
     Header,
     Request,
+    File,
+    UploadFile,
 )
 
 from pydantic import BaseModel, Field, field_validator
@@ -259,6 +261,66 @@ async def request_object(request: Request, path_id: int = 0):
         "code": 200,
         "data": {
             "token": request.headers.get("bearer"),
+        },
+    }
+
+
+# upload file
+@app.post("/file")
+async def file(file: bytes = File(...)):
+    """_summary_
+
+    Args:
+        file (bytes): file
+
+    Returns:
+        (dict)
+    """
+
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "file size": len(file),
+        },
+    }
+
+
+@app.post("/upload_file")
+async def upload_file(file: UploadFile):
+    """_summary_
+    Args:
+        file (UploadFile): file
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "file name": file.filename,
+            "file type": file.content_type,
+        },
+    }
+
+
+# multiple files
+@app.post("/multiple_files")
+async def multiple_files(files: list[UploadFile]):
+    """_summary_
+    Args:
+        files (list[UploadFile]): files
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "file name": [file.filename for file in files],
+            "file type": [file.content_type for file in files],
         },
     }
 

@@ -484,3 +484,66 @@ async def request_object(request: Request, path_id: int = 0):
         },
     }
 ```
+
+### request file
+
+- first install `python-multipart` by `pip install python-multipart`
+
+#### Method 1 (byte file)
+
+- this method receive file as bytes list, all content in file will be stored in memory
+
+```python
+# upload file
+@app.post("/file")
+async def file(file: bytes = File(...)):
+    """_summary_
+
+    Args:
+        file (bytes): file
+
+    Returns:
+        (dict)
+    """
+
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "file size": len(file),
+        },
+    }
+```
+
+#### Method 2 (file object) (recommended)
+
+- this method receive file as file object, part of file will automaticly be stored in disk
+- more meta info of file could be get from file object
+
+```python
+@app.post("/upload_file")
+async def upload_file(file: UploadFile):
+    """_summary_
+    Args:
+        file (UploadFile): file
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "file name": file.filename,
+            "file type": file.content_type,
+        },
+    }
+
+```
+
+- properties of UploadFile class
+    - `file`: Annotated[BinaryIO, Doc("The standard Python file object (non-async)."),]
+    - `filename`: Annotated[Optional[str], Doc("The original file name.")]
+    - `size`: Annotated[Optional[int], Doc("The size of the file in bytes.")]
+    - `headers`: Annotated[Headers, Doc("The headers of the request.")]
+    - `content_type`: Annotated[Optional[str], Doc("The content type of the request, from the headers.")]
