@@ -3,6 +3,7 @@ import json
 import os
 import threading
 from pathlib import Path, PosixPath
+from typing import BinaryIO
 
 from . import HASH_METHOD
 
@@ -14,26 +15,39 @@ def create_empty_file(filename: str, dir: str | PosixPath, size: int):
         f.write(b"\0")
 
 
-def write_chunk_to_position(filename: str, offset: int, data: bytes):
+def write_chunk_to_position(filename, offset: int, data: bytes):
     """Write chunk data to specific file position"""
     with open(filename, "r+b") as f:
         f.seek(offset)
         f.write(data)
 
 
-def calculate_hash(filename, hash_type=HASH_METHOD) -> str:
+def calculate_hash(
+    filename=None, fileIO: BinaryIO = None, hash_type=HASH_METHOD
+) -> str:
     """Calculate MD5 hash of entire file
     hash_method:
 
     """
+    assert filename or fileIO, Exception("Either filename or fileIO must be provided")
     assert hash_type in hashlib.algorithms_available, Exception(
         f"Hash method {hash_type} not available. Available methods: {hashlib.algorithms_available}"
     )
     hash = getattr(hashlib, hash_type)()
-    with open(filename, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash.update(chunk)
-    return hash.hexdigest()
+
+    if filename:
+        with open(filename, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash.update(chunk)
+        return hash.hexdigest()
+    else:
+        try:
+            assert hasattr(fileIO, "read"), Exception("fileIO is not readable")
+            for chunk in iter(lambda: fileIO.read(4096), b""):
+                hash.update(chunk)
+            return hash.hexdigest()
+        except Exception as e:
+            raise Exception(f"Error calculating hash: {e}")
 
 
 # Write chunk at specific position

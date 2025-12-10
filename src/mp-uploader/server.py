@@ -6,6 +6,7 @@ from fastapi import FastAPI, File, UploadFile
 from mp_server import (
     CHUNK_SIZE,
     PROJ_ROOT,
+    HASH_METHOD,
     BinaryChunkMapManager,
     setup_file_and_chunk_map,
     calculate_hash,
@@ -42,6 +43,7 @@ async def init_upload(
                     "status": "incomplete",
                     "message": "Upload not finish",
                     "chunk_size": CHUNK_SIZE,
+                    "hash": HASH_METHOD,
                     "chunks": chunk_manager.get_incomplete_chunks(),
                 }
             except Exception:
@@ -60,6 +62,7 @@ async def init_upload(
         "status": "incomplete",
         "message": "multi-part upload task ready",
         "chunk_size": CHUNK_SIZE,
+        "hash": HASH_METHOD,
         "chunks": chunk_manager.get_incomplete_chunks(),
     }
 
@@ -81,14 +84,16 @@ async def upload_chunk(
         offset (int): the offset of current chunk
         chunk (UploadFile, optional): _description_. Defaults to File(...).
     """
+    file_path = __UPLOAD_DIR__ / f"{file_hash}"
     chunk_manager = BinaryChunkMapManager(f"{file_hash}", __UPLOAD_DIR__)
     if chunk_manager.is_complete():
         return {
             "status": "completed",
             "message": "Upload ",
         }
-    if chunk_hash == calculate_hash(chunk.file):
-        write_chunk_to_position(f"{file_hash}", offset, chunk.file.read())
+    if chunk_hash == calculate_hash(fileIO=chunk.file):
+        chunk.file.seek(0)
+        write_chunk_to_position(file_path, offset, chunk.file.read())
         chunk_manager.mark_chunk(offset, complete=True)
         return {
             "status": "chunk_completed",
@@ -112,6 +117,7 @@ async def get_upload_status(file_hash: str):
             "status": "incomplete",
             "message": "Upload not finish",
             "chunk_size": CHUNK_SIZE,
+            "hash": HASH_METHOD,
             "chunks": chunk_manager.get_incomplete_chunks(),
         }
     else:
@@ -162,8 +168,9 @@ async def verify_chunks(file_hash: str, chunk_hashes: dict):
     # Return all incomplete chunks
     return {
         "status": "incomplete",
-        "incomplete_chunks": chunk_manager.get_incomplete_chunks(),
         "chunk_size": CHUNK_SIZE,
+        "hash": HASH_METHOD,
+        "incomplete_chunks": chunk_manager.get_incomplete_chunks(),
     }
 
 
