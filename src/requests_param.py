@@ -1,19 +1,19 @@
-from typing import Annotated
-from fastapi import (
-    FastAPI,
-    Query,
-    Path,
-    Form,
-    Cookie,
-    Header,
-    Request,
-    File,
-    UploadFile,
-    HTTPException,
-)
-
-from pydantic import BaseModel, Field, field_validator
 import re
+from typing import Annotated
+
+from fastapi import (
+    Cookie,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Path,
+    Query,
+    Request,
+    UploadFile,
+)
+from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI()
 

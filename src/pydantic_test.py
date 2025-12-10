@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
-from pprint import pprint as print
 import re
+from pprint import pprint as print
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class TestModel(BaseModel):
