@@ -326,6 +326,50 @@ async def multiple_files(files: list[UploadFile]):
     }
 
 
+# file upload and verify
+import hashlib
+from pathlib import Path
+
+_ROOT_ = Path(__file__).parent.resolve()
+_FILE_UPLOAD_DIR = _ROOT_ / "file_upload"
+_FILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@app.post("/file_upload_and_verify")
+async def file_upload_and_verify(
+    file: UploadFile = File(...),
+    md5: str = Form(""),
+):
+    """_summary_
+
+    Args:
+        file (UploadFile, optional): _description_. Defaults to File(...).
+        md5 (str, optional): _description_. Defaults to Form(...).
+    """
+    if hashlib.md5(file.file.read()).hexdigest() != md5:
+        # return {
+        #     "message": "Hello World",
+        #     "code": 400,
+        #     "data": {
+        #         "error": "md5 verify failed",
+        #     },
+        # }
+        raise HTTPException(status_code=400, detail="md5 verify failed")
+    else:
+        file.file.seek(0)
+        with open(_FILE_UPLOAD_DIR / str(file.filename), "wb") as f:
+            f.write(file.file.read())
+
+        return {
+            "message": "Hello World",
+            "code": 200,
+            "data": {
+                "file name": file.filename,
+                "file type": file.content_type,
+            },
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
 
