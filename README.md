@@ -2,6 +2,41 @@
 
 このノートでは、FastAPIを使って、APIを書く方法を学んでいきます。
 
+- [fastapi\_study\_note](#fastapi_study_note)
+  - [Installation](#installation)
+  - [pydantic](#pydantic)
+    - [JSON Schema](#json-schema)
+    - [pydantic型転換](#pydantic型転換)
+    - [pydantic Field](#pydantic-field)
+  - [スタート](#スタート)
+  - [fastapi request and response](#fastapi-request-and-response)
+    - [query parameters](#query-parameters)
+      - [example](#example)
+      - [デフォルト値の設定：](#デフォルト値の設定)
+      - [query check](#query-check)
+        - [example](#example-1)
+        - [`Query`](#query)
+    - [path parameters](#path-parameters)
+      - [example](#example-2)
+      - [path parameters check](#path-parameters-check)
+        - [example](#example-3)
+      - [`Path`](#path)
+    - [request body](#request-body)
+      - [Form](#form)
+      - [RAW JSON](#raw-json)
+    - [request cookies](#request-cookies)
+    - [request headers](#request-headers)
+    - [request object](#request-object)
+    - [request upload file](#request-upload-file)
+      - [Method 1 (byte file)](#method-1-byte-file)
+      - [Method 2 (UploadFile object) (recommended)](#method-2-uploadfile-object-recommended)
+    - [file upload and verify](#file-upload-and-verify)
+    - [response status code](#response-status-code)
+    - [response model](#response-model)
+    - [set cookie](#set-cookie)
+
+
+
 ## Installation
 
 `pip install fastapi` でインストールします。
@@ -485,7 +520,7 @@ async def request_object(request: Request, path_id: int = 0):
     }
 ```
 
-### request file
+### request upload file
 
 - first install `python-multipart` by `pip install python-multipart`
 
@@ -515,7 +550,7 @@ async def file(file: bytes = File(...)):
     }
 ```
 
-#### Method 2 (file object) (recommended)
+#### Method 2 (UploadFile object) (recommended)
 
 - this method receive file as file object, part of file will automaticly be stored in disk
 - more meta info of file could be get from file object
@@ -619,4 +654,69 @@ class Result(BaseModel):
 
 @app.get("/items2", response_model=Result)
 ...
+
+@app.get("/items3", response_model=List[Items])
+...
 ```
+
+### set cookie
+
+- method 1: use response object in fastapi.responses, a response object should be constructed first, then set cookie by `response.set_cookie(k, v)`
+
+```python
+@app.get("/cookie", response_model=Result)
+async def cookie(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (JSONResponse)
+    """
+    response = JSONResponse(
+        content=Result(
+            message="Hello World",
+            code=200,
+            data={
+                "result": a + b,
+            },
+        ).model_dump(),
+        status_code=status.HTTP_200_OK,
+    )
+    response.set_cookie(
+        key="_session_id",
+        value="fake-session-id",
+    )
+    return response
+```
+
+- method 2: get response object passed in as method parameter, set cookie by `response.set_cookie(k, v)` without constructing response object
+
+```python
+@app.get("/cookie2", response_model=Result)
+async def cookie2(response: Response, a: int, b: int):
+    """_summary_
+
+    Args:
+        response (Response): response
+        a (int): a
+        b (int): b
+
+    Returns:
+        (Result)
+    """
+    response.set_cookie(
+        key="_session_id",
+        value="fake-session-id-2",
+    )
+    return Result(
+        message="Hello World",
+        code=200,
+        data={
+            "result": a + b,
+        },
+    )
+```
+

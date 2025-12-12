@@ -11,9 +11,11 @@ from fastapi import (
     Path,
     Query,
     Request,
+    Response,
     UploadFile,
     status,
 )
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI()
@@ -483,6 +485,84 @@ async def get_items_2(a: int, b: int):
             "result": a + b,
         },
     }
+
+
+# json response
+@app.get("/json_response", response_model=Result)
+async def json_response(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (JSONResponse)
+    """
+    return JSONResponse(
+        content={
+            "message": "Hello World",
+            "code": 200,
+            "data": {
+                "result": a + b,
+            },
+        },
+        status_code=status.HTTP_200_OK,
+    )
+
+
+# cookie in response
+@app.get("/cookie", response_model=Result)
+async def cookie(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (JSONResponse)
+    """
+    response = JSONResponse(
+        content=Result(
+            message="Hello World",
+            code=200,
+            data={
+                "result": a + b,
+            },
+        ).model_dump(),
+        status_code=status.HTTP_200_OK,
+    )
+    response.set_cookie(
+        key="_session_id",
+        value="fake-session-id",
+    )
+    return response
+
+
+@app.get("/cookie2", response_model=Result)
+async def cookie2(response: Response, a: int, b: int):
+    """_summary_
+
+    Args:
+        response (Response): response
+        a (int): a
+        b (int): b
+
+    Returns:
+        (Result)
+    """
+    response.set_cookie(
+        key="_session_id",
+        value="fake-session-id-2",
+    )
+    return Result(
+        message="Hello World",
+        code=200,
+        data={
+            "result": a + b,
+        },
+    )
 
 
 if __name__ == "__main__":
