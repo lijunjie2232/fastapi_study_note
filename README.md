@@ -548,6 +548,8 @@ async def upload_file(file: UploadFile):
     - `headers`: Annotated[Headers, Doc("The headers of the request.")]
     - `content_type`: Annotated[Optional[str], Doc("The content type of the request, from the headers.")]
 
+- use `UploadFile.file.seek(0)` to reset file pointer
+
 ### file upload and verify
 
 ```python
@@ -596,3 +598,4 @@ async def file_upload_and_verify(
         }
 
 ```
+

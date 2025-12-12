@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-
-from fastapi import FastAPI, File, UploadFile
+from typing import List
+from fastapi import FastAPI, File, UploadFile, Query
 
 from mp_server import (
     CHUNK_SIZE,
@@ -174,7 +174,156 @@ async def verify_chunks(file_hash: str, chunk_hashes: dict):
     }
 
 
+@app.get("/download/init")
+async def init_download(file_hash: str):
+    """Initialize download by checking file existence and returning chunk information"""
+    file_path = __UPLOAD_DIR__ / f"{file_hash}"
+
+    # Check if file exists
+    if not file_path.is_file():
+        return {
+            "status": "error",
+            "message": "File not found",
+        }
+
+    # Verify file integrity
+    if calculate_hash(file_path) != file_hash:
+        return {
+            "status": "error",
+            "message": "File hash mismatch",
+        }
+
+    # Get file size
+    file_size = file_path.stat().st_size
+
+    # Create chunk manager to get chunk information
+    chunk_manager = BinaryChunkMapManager(f"{file_hash}", __UPLOAD_DIR__)
+    try:
+        chunk_manager.check_init()
+    except Exception:
+        # If no chunk map exists, create one
+        setup_file_and_chunk_map(f"{file_hash}", __UPLOAD_DIR__, file_size, CHUNK_SIZE)
+        chunk_manager = BinaryChunkMapManager(f"{file_hash}", __UPLOAD_DIR__)
+
+    return {
+        "status": "ready",
+        "message": "Download ready",
+        "file_size": file_size,
+        "chunk_size": CHUNK_SIZE,
+        "hash": HASH_METHOD,
+        "total_chunks": (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE,
+        "chunks": [
+            i * CHUNK_SIZE for i in range((file_size + CHUNK_SIZE - 1) // CHUNK_SIZE)
+        ],  # All chunk offsets
+    }
+
+
+@app.get("/download/chunk")
+async def download_chunk(file_hash: str, offset: int):
+    """Download a specific chunk of the file"""
+    file_path = __UPLOAD_DIR__ / f"{file_hash}"
+
+    # Check if file exists
+    if not file_path.is_file():
+        return {
+            "status": "error",
+            "message": "File not found",
+        }
+
+    try:
+        # Read chunk data from file
+        with open(file_path, "rb") as f:
+            f.seek(offset)
+            chunk_data = f.read(CHUNK_SIZE)
+
+        # Calculate chunk hash for verification
+        chunk_hash = calculate_hash(chunk_data)
+
+        return {
+            "status": "chunk_ready",
+            "chunk_hash": chunk_hash,
+            "offset": offset,
+            "size": len(chunk_data),
+            "data": chunk_data,  # This would be the binary data
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to read chunk: {str(e)}",
+        }
+
+
+@app.get("/download/chunk-hashes")
+async def get_chunk_hashes(file_hash: str, offsets: List[int] = Query([])):
+    """
+    Get hash values for specified chunks or all chunks of a file.
+
+    Args:
+        file_hash (str): The hash of the file
+        offsets (str, optional): Comma-separated list of offsets to get hashes for.
+                                If not provided, returns hashes for all chunks.
+
+    Returns:
+        dict: Status and chunk hashes mapping offset to hash
+    """
+    file_path = __UPLOAD_DIR__ / f"{file_hash}"
+
+    # Check if file exists
+    if not file_path.is_file():
+        return {
+            "status": "error",
+            "message": "File not found",
+        }
+
+    try:
+        # Get file size
+        file_size = file_path.stat().st_size
+
+        # Determine which offsets to process
+        # if offsets:
+        #     # Parse comma-separated offsets
+        #     target_offsets = [int(offset.strip()) for offset in offsets.split(",")]
+        # else:
+        # if not offsets:
+        # # Generate all chunk offsets
+        # target_offsets = [
+        #     i * CHUNK_SIZE
+        #     for i in range((file_size + CHUNK_SIZE - 1) // CHUNK_SIZE)
+        # ]
+
+        target_offsets = (
+            [i * CHUNK_SIZE for i in range((file_size + CHUNK_SIZE - 1) // CHUNK_SIZE)]
+            if not offsets
+            else offsets
+        )
+
+        # Calculate hash for each requested chunk
+        chunk_hashes = {}
+        with open(file_path, "rb") as f:
+            for offset in target_offsets:
+                # Validate offset is within file bounds
+                if offset >= file_size:
+                    continue
+
+                f.seek(offset)
+                chunk_data = f.read(CHUNK_SIZE)
+                chunk_hash = calculate_hash(chunk_data)
+                chunk_hashes[offset] = chunk_hash
+
+        return {
+            "status": "success",
+            "chunk_size": CHUNK_SIZE,
+            "hash": HASH_METHOD,
+            "chunk_hashes": chunk_hashes,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to calculate chunk hashes: {str(e)}",
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=6666)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
