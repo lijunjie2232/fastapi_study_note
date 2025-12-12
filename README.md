@@ -599,3 +599,24 @@ async def file_upload_and_verify(
 
 ```
 
+### response status code
+
+```python
+@app.put("/add", status_code=fastapi.status.HTTP_201_CREATED)
+...
+```
+- status code could be set in `@app.put()` or `return`
+
+### response model
+
+```python
+# response model
+class Result(BaseModel):
+    message: str
+    code: int = 200
+    data: dict | None = None
+
+
+@app.get("/items2", response_model=Result)
+...
+```

@@ -12,6 +12,7 @@ from fastapi import (
     Query,
     Request,
     UploadFile,
+    status,
 )
 from pydantic import BaseModel, Field, field_validator
 
@@ -374,6 +375,114 @@ async def file_upload_and_verify(
 @app.get("/items/")
 def get_items(ids: List[int] = Query([])):
     return {"ids": ids}
+
+
+# response status code example
+@app.put("/add", status_code=status.HTTP_201_CREATED)
+async def add(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "result": a + b,
+        },
+    }
+
+
+@app.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "result": a + b,
+        },
+    }
+
+
+@app.get("/items", status_code=status.HTTP_200_OK)
+async def get_items_1(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "result": a + b,
+        },
+    }
+
+
+@app.post("/items", status_code=status.HTTP_201_CREATED)
+async def post_items(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "result": a + b,
+        },
+    }
+
+
+# response model
+class Result(BaseModel):
+    message: str
+    code: int = 200
+    data: dict | None = None
+
+
+@app.get("/items2", response_model=Result)
+async def get_items_2(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (dict)
+    """
+    return {
+        "message": "Hello World",
+        "code": 200,
+        "data": {
+            "result": a + b,
+        },
+    }
 
 
 if __name__ == "__main__":
