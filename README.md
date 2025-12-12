@@ -34,6 +34,7 @@
     - [response status code](#response-status-code)
     - [response model](#response-model)
     - [set cookie](#set-cookie)
+    - [response header](#response-header)
 
 
 
@@ -719,4 +720,9 @@ async def cookie2(response: Response, a: int, b: int):
         },
     )
 ```
+
+### response header
+
+- response header is a `Mapping[str, str]` actually, so the value cound be accessed just like dict by `response.headers[key]`, and so set header by `response.headers[key] = value`.
+- two methods of getting response object is just like the above two methods in [`set cookie`](#set-cookie)
 

@@ -565,6 +565,54 @@ async def cookie2(response: Response, a: int, b: int):
     )
 
 
+# response header
+@app.get("/header", response_model=Result)
+async def header(response: Response, a: int, b: int):
+    """_summary_
+
+    Args:
+        response (Response): response
+        a (int): a
+        b (int): b
+
+    Returns:
+        (Result)
+    """
+    response.headers["X-Process-Time"] = "0.12345"
+    return Result(
+        message="Hello World",
+        code=200,
+        data={
+            "result": a + b,
+        },
+    )
+
+
+@app.get("/header2", response_model=Result)
+async def header2(a: int, b: int):
+    """_summary_
+
+    Args:
+        a (int): a
+        b (int): b
+
+    Returns:
+        (JSONResponse)
+    """
+    response = JSONResponse(
+        content=Result(
+            message="Hello World",
+            code=200,
+            data={
+                "result": a + b,
+            },
+        ).model_dump(),
+        status_code=status.HTTP_200_OK,
+    )
+    response.headers["X-Process-Time"] = "0.67890"
+    return response
+
+
 if __name__ == "__main__":
     import uvicorn
 
