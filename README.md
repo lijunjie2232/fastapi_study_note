@@ -35,6 +35,9 @@
     - [response model](#response-model)
     - [set cookie](#set-cookie)
     - [response header](#response-header)
+  - [Tortoise ORM](#tortoise-orm)
+    - [connection configuration](#connection-configuration)
+    - [model definition](#model-definition)
 
 
 
@@ -726,3 +729,54 @@ async def cookie2(response: Response, a: int, b: int):
 - response header is a `Mapping[str, str]` actually, so the value cound be accessed just like dict by `response.headers[key]`, and so set header by `response.headers[key] = value`.
 - two methods of getting response object is just like the above two methods in [`set cookie`](#set-cookie)
 
+## Tortoise ORM
+
+- in order to use `sqlmodel`, `pip install sqlmodel` to install it first.
+- in order to use `tortoise`, `pip install tortoise-orm` to install it first.
+- use `pip install tortoise-orm[asyncmy]` to install driver for mysql series database.(`asyncodbc` for sqlserver series database, `asyncpg`/`psycopg` for postgresql series database, `asyncmy`/`mysql` for mysql series database, `sqlite`/`aiosqlite` for sqlite series database)
+
+### connection configuration
+
+```python
+async def init():
+    # Initialize Tortoise ORM with MySQL database connection
+    await Tortoise.init(
+        db_url="mysql://root:password@127.0.0.1:13306/fastapi_dev",
+        # Register models module - using __main__ for this example
+        modules={"models": ["__main__"]},
+    )
+
+    # Generate database schemas based on defined models
+    await Tortoise.generate_schemas(safe=True)
+```
+
+### model definition
+
+```python
+# Define User model that inherits from Tortoise's Model class
+class User(Model):
+    # Primary key field with auto increment
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+    )
+    # Username field with maximum length of 255 characters and unique constraint
+    username = CharField(
+        max_length=255,
+        unique=True,
+    )
+    # Email field with maximum length of 255 characters and unique constraint
+    email = CharField(
+        max_length=255,
+        unique=True,
+    )
+    # Password field with maximum length of 255 characters
+    password = CharField(max_length=255)
+    # Boolean field indicating if user is active, defaults to True
+    is_active = BooleanField(default=True)
+    # Boolean field indicating if user is superuser, defaults to False
+    is_superuser = BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return self.username
+```
