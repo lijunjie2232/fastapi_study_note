@@ -44,6 +44,13 @@
       - [OneToOneField](#onetoonefield)
       - [ManyToManyField](#manytomanyfield)
       - [Full Example](#full-example)
+    - [sql operations](#sql-operations)
+      - [Create user](#create-user)
+      - [query users](#query-users)
+      - [Update user](#update-user)
+      - [delete user](#delete-user)
+      - [advanced query](#advanced-query)
+        - [filter](#filter)
 
 
 
@@ -872,6 +879,8 @@ class UserInfo(Model):
     ...
 ```
 #### ManyToManyField
+- `ManyToManyField` is used to define a many-to-many relationship between two models.
+- the 'many-to-many' relationship will be stored in a separate table joins the primary key of the two models and could only by this way.
 
 ```python
 # Many-to-Many relationship example
@@ -1119,4 +1128,115 @@ CREATE TABLE `groups_users` (
     CONSTRAINT `1` FOREIGN KEY (`groups_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
     CONSTRAINT `2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'Many-to-Many relationship to User model';
+```
+
+### sql operations
+
+#### Create user
+
+- use `await User.create(username="xxx", email="xxx", ...)` to create a new user and auto insert into the database
+- the auto-increment field will be automatically filled in
+
+```python
+async def do_create_user():
+    # Example function to create a new user
+    for i in range(5):
+        user = await User.create(
+            username=f"john_doe_{i}",
+            email=f"john_doe_{i}@example.com",
+            password="password",
+        )
+        print(f"Created user: {user}")
+```
+
+> However, the method `create` could be **error** if the unique constraint is violated when inserting. So, use `get_or_create` instead.
+
+```python
+async def do_create_user():
+    # Example function to create a new user
+    for i in range(5):
+        user = await User.get_or_create(
+            username=f"john_doe_{i}",
+            email=f"john_doe_{i}@example.com",
+            password="password",
+        )
+        print(f"Created user: {user}")
+```
+
+
+#### query users
+
+- use `await User.all()` to query all users
+
+```python
+async def do_query_users():
+    # Example function to query all users
+    users = await User.all()
+    for user in users:
+        print(f"User: {user}, Email: {user.email}")
+```
+
+#### Update user
+
+- use `user = User.get(key=value)` to specify the user to update
+- change the fields to update
+- save the changes by `user.save()`
+
+```python
+async def do_update_user():
+    # Example function to update a user
+    user = await User.get(username="john_doe_1")
+    user.email = "john@example.com"
+    await user.save()
+    print(f"Updated user: {user}")
+```
+
+#### delete user
+
+- use `user = User.get(key=value)` to specify the user to delete
+- delete the user by `await user.delete()`
+
+```python
+async def do_delete_user():
+    # Example function to delete a user
+    user = await User.get(username="john_doe_1")
+    await user.delete()
+    print(f"Deleted user: {user}")
+```
+
+### advanced query
+
+> Use `User.get(key=value)` to query a single user, however, if there are multiple users with the same username or no users with the specified username, it will raise an error.
+
+> To avoid error while no matched user by `get` method, use `get_or_none`.
+
+#### filter
+
+- `User.filter(key1=value1, key2=value2, ...)` will return a list of users that match the specified conditions
+- `User.filter(key1=value1, key2=value2, ...).update(key3=value3, ...)` will update the specified fields for all users that match the specified conditions
+- 
+
+```python
+async def advanced_query():
+
+    # Basic filtering
+    users = await User.filter(is_active=True)
+    print(f"Active users: {users}")
+
+    # Complex conditions with operators
+    users = await User.filter(username__icontains="john")
+    print(f"Users with 'john' in username: {users}")
+
+    # Multiple conditions (AND by default)
+    users = await User.filter(is_active=True, is_superuser=False)
+    print(f"Active non-superuser users: {users}")
+
+    # update Active status for users
+    await User.filter(is_active=True).update(is_superuser=False)
+
+    # OR conditions using Q objects
+    from tortoise.expressions import Q
+
+    users = await User.filter(Q(username="john") | Q(email="john@example.com"))
+    print(f"Users with username 'john' or email 'john@example.com': {users}")
 ```
