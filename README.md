@@ -41,6 +41,8 @@
       - [model fields](#model-fields)
     - [model relationship](#model-relationship)
       - [ForeignKeyField](#foreignkeyfield)
+      - [OneToOneField](#onetoonefield)
+      - [ManyToManyField](#manytomanyfield)
 
 
 
@@ -852,3 +854,49 @@ class User(Model):
     ```
 
     > It is OK to only define `ReverseRelation` or `ForeignKeyField`
+
+#### OneToOneField
+```python
+class UserInfo(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    user = OneToOneField(
+        "models.User",
+        related_name="userinfo",
+        description="Foreign key field to link to User model",
+    )
+    ...
+```
+#### ManyToManyField
+
+```python
+# Many-to-Many relationship example
+# Many-to-Many relationship example
+class Group(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    name = CharField(
+        max_length=100,
+        unique=True,
+        description="Group name with maximum length of 100 characters and unique constraint",
+    )
+    members = ManyToManyField(
+        "models.User",
+        related_name="groups",
+        description="Many-to-Many relationship to User model",
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        table = "groups"  # Specify custom table name
+        table_description = "Group table"  # Description for the table
+
+```

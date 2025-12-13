@@ -11,6 +11,8 @@ from tortoise.fields import (
     BooleanField,
     ForeignKeyField,
     ReverseRelation,
+    OneToOneField,
+    ManyToManyField,
 )
 
 
@@ -39,8 +41,10 @@ class User(Model):
     is_active = BooleanField(default=True)
     # Boolean field indicating if user is superuser, defaults to False
     is_superuser = BooleanField(default=False)
-    # reverse relation to Order model
+    # reverse relation to Other models
     orders: ReverseRelation["Order"]
+    userinfo: ReverseRelation["UserInfo"]
+    groups: ReverseRelation["Group"]
 
     def __str__(self) -> str:
         return self.username
@@ -50,6 +54,40 @@ class User(Model):
         table_description = "User table"  # Description for the table
 
 
+# One-to-One relationship example
+class UserInfo(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    user = OneToOneField(
+        "models.User",
+        related_name="userinfo",
+        description="Foreign key field to link to User model",
+    )
+    full_name = CharField(
+        max_length=255,
+        description="Full name of the user",
+    )
+    address = CharField(
+        max_length=500,
+        description="Address of the user",
+    )
+    phone_number = CharField(
+        max_length=20,
+        description="Phone number of the user",
+    )
+
+    def __str__(self) -> str:
+        return self.full_name
+
+    class Meta:
+        table = "user_info"  # Specify custom table name
+        table_description = "User Info table"  # Description for the table
+
+
+# Many-to-One relationship example
 class Order(Model):
     id = IntField(
         pk=True,
@@ -77,6 +115,32 @@ class Order(Model):
     class Meta:
         table = "orders"  # Specify custom table name
         table_description = "Order table"  # Description for the table
+
+
+# Many-to-Many relationship example
+class Group(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    name = CharField(
+        max_length=100,
+        unique=True,
+        description="Group name with maximum length of 100 characters and unique constraint",
+    )
+    members = ManyToManyField(
+        "models.User",
+        related_name="groups",
+        description="Many-to-Many relationship to User model",
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        table = "groups"  # Specify custom table name
+        table_description = "Group table"  # Description for the table
 
 
 async def init():
