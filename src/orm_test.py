@@ -9,6 +9,8 @@ from tortoise.fields import (
     IntField,
     CharField,
     BooleanField,
+    ForeignKeyField,
+    ReverseRelation,
 )
 
 
@@ -37,6 +39,8 @@ class User(Model):
     is_active = BooleanField(default=True)
     # Boolean field indicating if user is superuser, defaults to False
     is_superuser = BooleanField(default=False)
+    # reverse relation to Order model
+    orders: ReverseRelation["Order"]
 
     def __str__(self) -> str:
         return self.username
@@ -44,6 +48,35 @@ class User(Model):
     class Meta:
         table = "users"  # Specify custom table name
         table_description = "User table"  # Description for the table
+
+
+class Order(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    order_number = CharField(
+        max_length=100,
+        unique=True,
+        description="Order number with maximum length of 100 characters and unique constraint",
+    )
+    user = ForeignKeyField(
+        "models.User",
+        related_name="orders",
+        description="Foreign key field to link to User model",
+    )
+    total_amount = IntField(
+        description="Total amount for the order",
+    )
+    is_paid = BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return self.order_number
+
+    class Meta:
+        table = "orders"  # Specify custom table name
+        table_description = "Order table"  # Description for the table
 
 
 async def init():

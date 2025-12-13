@@ -39,6 +39,8 @@
     - [connection configuration](#connection-configuration)
     - [model definition](#model-definition)
       - [model fields](#model-fields)
+    - [model relationship](#model-relationship)
+      - [ForeignKeyField](#foreignkeyfield)
 
 
 
@@ -798,3 +800,55 @@ class User(Model):
 - `DateField`: Date field.
 - `DateTimeField`: DateTime field.
 
+### model relationship
+
+- `ForeignKeyField`: Foreign key field.
+- `OneToOneField`: One-to-one field.
+- `ManyToManyField`: Many-to-many field.
+
+#### ForeignKeyField
+1. `ForeignKeyField` is used to define a relationship between two models.
+
+    ```python
+    class Order(Model):
+        id = IntField(
+            pk=True,
+            auto_increment=True,
+            description="Primary key field with auto increment",
+        )
+        order_number = CharField(
+            max_length=100,
+            unique=True,
+            description="Order number with maximum length of 100 characters and unique constraint",
+        )
+        user = ForeignKeyField(
+            "models.User",
+            related_name="orders",
+            description="Foreign key field to link to User model",
+        )
+        total_amount = IntField(
+            description="Total amount for the order",
+        )
+        is_paid = BooleanField(default=False)
+
+        def __str__(self) -> str:
+            return self.order_number
+
+        class Meta:
+            table = "orders"  # Specify custom table name
+            table_description = "Order table"  # Description for the table
+    ```
+
+    > in the example above, `ForeignKeyField("models.User", related_name="orders", description="")` is used to define a `one to many relationship` between `Order` model and `User` model.
+
+2. reverse relation in `User` model
+
+    ```python
+    class User(Model):
+        ...
+        # reverse relation to Order model
+        orders: ReverseRelation["Order"]
+        ...
+    ```
+
+    > It is OK to only define `ReverseRelation` or `ForeignKeyField`
