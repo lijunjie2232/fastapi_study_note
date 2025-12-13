@@ -38,6 +38,7 @@
   - [Tortoise ORM](#tortoise-orm)
     - [connection configuration](#connection-configuration)
     - [model definition](#model-definition)
+      - [model fields](#model-fields)
 
 
 
@@ -784,5 +785,16 @@ class User(Model):
 
     class Meta:
         table = "users"  # Specify custom table name
-
 ```
+
+#### model fields
+
+- `IntField`: Integer field.
+- `CharField`: String field.
+- `TextField`: Text field.
+- `BooleanField`: Boolean field.
+- `FloatField`: Float field.
+- `DecimalField`: Decimal field.
+- `DateField`: Date field.
+- `DateTimeField`: DateTime field.
+
