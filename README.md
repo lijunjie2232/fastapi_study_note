@@ -43,6 +43,7 @@
       - [ForeignKeyField](#foreignkeyfield)
       - [OneToOneField](#onetoonefield)
       - [ManyToManyField](#manytomanyfield)
+      - [Full Example](#full-example)
 
 
 
@@ -899,4 +900,223 @@ class Group(Model):
         table = "groups"  # Specify custom table name
         table_description = "Group table"  # Description for the table
 
+```
+
+#### Full Example
+```python
+from typing import Optional
+
+from tortoise import (
+    Tortoise,
+    run_async,
+    Model,
+)
+from tortoise.fields import (
+    IntField,
+    CharField,
+    BooleanField,
+    ForeignKeyField,
+    ReverseRelation,
+    OneToOneField,
+    ManyToManyField,
+)
+
+
+# Define User model that inherits from Tortoise's Model class
+class User(Model):
+    # Primary key field with auto increment
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    # Username field with maximum length of 255 characters and unique constraint
+    username = CharField(
+        max_length=255,
+        unique=True,
+        description="Username field with maximum length of 255 characters and unique constraint",
+    )
+    # Email field with maximum length of 255 characters and unique constraint
+    email = CharField(
+        max_length=255,
+        unique=True,
+    )
+    # Password field with maximum length of 255 characters
+    password = CharField(max_length=255)
+    # Boolean field indicating if user is active, defaults to True
+    is_active = BooleanField(default=True)
+    # Boolean field indicating if user is superuser, defaults to False
+    is_superuser = BooleanField(default=False)
+    # reverse relation to Other models
+    orders: ReverseRelation["Order"]
+    userinfo: ReverseRelation["UserInfo"]
+    groups: ReverseRelation["Group"]
+
+    def __str__(self) -> str:
+        return self.username
+
+    class Meta:
+        table = "users"  # Specify custom table name
+        table_description = "User table"  # Description for the table
+
+
+# One-to-One relationship example
+class UserInfo(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    user = OneToOneField(
+        "models.User",
+        related_name="userinfo",
+        description="Foreign key field to link to User model",
+    )
+    full_name = CharField(
+        max_length=255,
+        description="Full name of the user",
+    )
+    address = CharField(
+        max_length=500,
+        description="Address of the user",
+    )
+    phone_number = CharField(
+        max_length=20,
+        description="Phone number of the user",
+    )
+
+    def __str__(self) -> str:
+        return self.full_name
+
+    class Meta:
+        table = "user_info"  # Specify custom table name
+        table_description = "User Info table"  # Description for the table
+
+
+# Many-to-One relationship example
+class Order(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    order_number = CharField(
+        max_length=100,
+        unique=True,
+        description="Order number with maximum length of 100 characters and unique constraint",
+    )
+    user = ForeignKeyField(
+        "models.User",
+        related_name="orders",
+        description="Foreign key field to link to User model",
+    )
+    total_amount = IntField(
+        description="Total amount for the order",
+    )
+    is_paid = BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return self.order_number
+
+    class Meta:
+        table = "orders"  # Specify custom table name
+        table_description = "Order table"  # Description for the table
+
+
+# Many-to-Many relationship example
+class Group(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="Primary key field with auto increment",
+    )
+    name = CharField(
+        max_length=100,
+        unique=True,
+        description="Group name with maximum length of 100 characters and unique constraint",
+    )
+    members = ManyToManyField(
+        "models.User",
+        related_name="groups",
+        description="Many-to-Many relationship to User model",
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        table = "groups"  # Specify custom table name
+        table_description = "Group table"  # Description for the table
+
+
+async def init():
+    # Initialize Tortoise ORM with MySQL database connection
+    await Tortoise.init(
+        db_url="mysql://root:password@127.0.0.1:13306/fastapi_dev",
+        # Register models module - using __main__ for this example
+        modules={"models": ["__main__"]},
+    )
+
+    # Generate database schemas based on defined models
+    await Tortoise.generate_schemas(safe=True)
+
+
+if __name__ == "__main__":
+    # Run the async initialization function
+    run_async(init())
+    print("Database initialized and schemas generated.")
+```
+
+- equivalent SQL query:
+```sql
+CREATE TABLE `users` (
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key field with auto increment',
+    `username` varchar(255) NOT NULL COMMENT 'Username field with maximum length of 255 characters and unique constraint',
+    `email` varchar(255) NOT NULL,
+    `password` varchar(255) NOT NULL,
+    `is_active` tinyint(1) NOT NULL DEFAULT 1,
+    `is_superuser` tinyint(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `username` (`username`),
+    UNIQUE KEY `email` (`email`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'User table';
+
+CREATE TABLE `user_info` (
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key field with auto increment',
+    `full_name` varchar(255) NOT NULL COMMENT 'Full name of the user',
+    `address` varchar(500) NOT NULL COMMENT 'Address of the user',
+    `phone_number` varchar(20) NOT NULL COMMENT 'Phone number of the user',
+    `user_id` int(11) NOT NULL COMMENT 'Foreign key field to link to User model',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `user_id` (`user_id`),
+    CONSTRAINT `fk_user_inf_users_f7a4c25a` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'User Info table';
+
+CREATE TABLE `orders` (
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key field with auto increment',
+    `order_number` varchar(100) NOT NULL COMMENT 'Order number with maximum length of 100 characters and unique constraint',
+    `total_amount` int(11) NOT NULL COMMENT 'Total amount for the order',
+    `is_paid` tinyint(1) NOT NULL DEFAULT 0,
+    `user_id` int(11) NOT NULL COMMENT 'Foreign key field to link to User model',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `order_number` (`order_number`),
+    KEY `fk_orders_users_411bb784` (`user_id`),
+    CONSTRAINT `fk_orders_users_411bb784` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'Order table';
+
+CREATE TABLE `groups` (
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key field with auto increment',
+    `name` varchar(100) NOT NULL COMMENT 'Group name with maximum length of 100 characters and unique constraint',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name` (`name`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'Group table';
+
+CREATE TABLE `groups_users` (
+    `groups_id` int(11) NOT NULL,
+    `user_id` int(11) NOT NULL,
+    UNIQUE KEY `uidx_groups_user_groups__403fc9` (`groups_id`, `user_id`),
+    KEY `user_id` (`user_id`),
+    CONSTRAINT `1` FOREIGN KEY (`groups_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_uca1400_ai_ci COMMENT = 'Many-to-Many relationship to User model';
 ```
