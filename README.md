@@ -759,11 +759,13 @@ class User(Model):
     id = IntField(
         pk=True,
         auto_increment=True,
+        description="Primary key field with auto increment",
     )
     # Username field with maximum length of 255 characters and unique constraint
     username = CharField(
         max_length=255,
         unique=True,
+        description="Username field with maximum length of 255 characters and unique constraint",
     )
     # Email field with maximum length of 255 characters and unique constraint
     email = CharField(
@@ -779,4 +781,8 @@ class User(Model):
 
     def __str__(self) -> str:
         return self.username
+
+    class Meta:
+        table = "users"  # Specify custom table name
+
 ```
