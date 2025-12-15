@@ -60,6 +60,13 @@
         - [access related objects](#access-related-objects)
       - [prefetch related objects](#prefetch-related-objects)
       - [`tortoise.functions`](#tortoisefunctions)
+        - [Text Transformation Functions](#text-transformation-functions)
+        - [Null Handling Functions](#null-handling-functions)
+        - [Database-Specific Random Functions](#database-specific-random-functions)
+        - [Aggregate Functions](#aggregate-functions)
+        - [Example Usage](#example-usage)
+        - [Usage Patterns](#usage-patterns)
+      - [execute raw SQL](#execute-raw-sql)
 
 
 
@@ -1296,4 +1303,109 @@ for user in users:
 ```
 
 #### `tortoise.functions`
+
+Tortoise ORM provides built-in functions and aggregates for performing operations on database fields and calculating aggregated values across records.
+
+##### Text Transformation Functions
+
+Several functions are available for transforming text fields:
+
+- `Trim("FIELD_NAME")` - Removes whitespace from both ends of text
+- `Length("FIELD_NAME")` - Returns the character count of text/blob fields
+- `Lower("FIELD_NAME")` - Converts text to lowercase
+- `Upper("FIELD_NAME")` - Converts text to uppercase
+- `Concat("FIELD_NAME", ANOTHER_FIELD_OR_TEXT)` - Combines fields or text values (note: not supported by all databases like SQLite)
+
+##### Null Handling Functions
+
+- `Coalesce("FIELD_NAME", DEFAULT_VALUE)` - Provides a fallback value when the field is NULL
+
+##### Database-Specific Random Functions
+
+Different databases have specific implementations for generating random numbers:
+- MySQL: `Rand()`
+- PostgreSQL: `Random()`
+- SQLite: `Random()`
+
+##### Aggregate Functions
+
+Aggregates operate on entire columns and are typically used with grouping operations:
+
+- `Count("FIELD_NAME")` - Counts the number of entries in a column
+- `Sum("FIELD_NAME")` - Calculates the total sum of all values in a column
+- `Max("FIELD_NAME")` - Finds the largest value in a column
+- `Min("FIELD_NAME")` - Finds the smallest value in a column
+- `Avg("FIELD_NAME")` - Computes the average (mean) of all values in a column
+
+##### Example Usage
+```python
+# Add computed fields to queryset
+from tortoise.functions import Count, Avg, Sum, Min, Max
+
+# Group by example
+order_group = (
+    await Order.all()
+    .annotate(total_orders=Count("id"))
+    .group_by("user_id")
+    # .values("user_id", "total_orders")
+)
+print(f"Order count grouped by user: {order_group}")
+
+#  Count example
+users_with_order_count = await User.annotate(order_count=Count("orders")).filter(
+    order_count__gt=0
+)
+print(f"Users with at least one order: {users_with_order_count}")
+
+# avg, min, max, sum examples
+avg_age = await User.all().annotate(avg_age=Avg("age")).values("avg_age")
+print(f"Average age of users: {avg_age}")
+min_age = await User.all().annotate(min_age=Min("age")).values("min_age")
+print(f"Minimum age of users: {min_age}")
+max_age = await User.all().annotate(max_age=Max("age")).values("max_age")
+print(f"Maximum age of users: {max_age}")
+total_amount = (
+    await User.all().annotate(total_amount=Sum("amount")).values("total_amount")
+)
+print(f"Total amount of users: {total_amount}")
+
+```
+
+##### Usage Patterns
+
+Functions can be used in annotations and updates:
+
+```python
+# Using functions in annotations
+from tortoise.functions import Upper, Length
+
+users = await User.annotate(
+    upper_name=Upper("username"),
+    name_length=Length("username")
+).all()
+
+# Using custom functions
+from pypika_tortoise import CustomFunction
+from tortoise.expressions import F, Function
+
+class TruncMonth(Function):
+    database_func = CustomFunction("DATE_FORMAT", ["name", "dt_format"])
+
+sql = Task.all().annotate(date=TruncMonth('created_at', '%Y-%m-%d')).values('date').sql()
+print(sql)
+# SELECT DATE_FORMAT(`created_at`,'%Y-%m-%d') `date` FROM `task`
+```
+
+- `CustomFunction` is a class that represents a custom function in SQL.
+- `DATA_FORMAT` is the name of the function in SQL.
+- `["name", "dt_format"]` is the list of arguments for the function `DATE_FORMAT`.
+- So `TruncMonth('created_at', '%Y-%m-%d'))` is equal to `DATE_FORMAT(created_at,'%Y-%m-%d')` in SQL.
+
+#### execute raw SQL
+
+```python
+# Execute raw SQL when needed
+users = await User.raw("SELECT * FROM users WHERE is_active = True")
+print(f"Active users (raw SQL): {users}")
+```
 
