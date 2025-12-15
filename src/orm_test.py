@@ -189,6 +189,37 @@ async def do_create_user():
         print(f"Created user: {user}")
 
 
+async def do_create_user_info():
+    # Example function to create user info for existing users
+    import random
+
+    users = await User.all()
+    for user in users:
+        user_info = await UserInfo.create(
+            user=user,
+            full_name=f"Full Name {user.username}",
+            address=f"{random.randint(100, 999)} Main St, City, Country",
+            phone_number=f"+123456789{random.randint(10,99)}",
+        )
+        print(f"Created user info: {user_info} for user: {user}")
+
+
+async def do_create_order():
+    # Example function to create a new order
+    import random
+
+    users = await User.all()
+    for i in range(5000):
+        user = random.choice(users)
+        order = await Order.create(
+            order_number=f"ORDER_{i+1:05d}",
+            user=user,
+            total_amount=random.randint(50, 500),
+            is_paid=random.choice([True, False]),
+        )
+        print(f"Created order: {order} for user: {user}")
+
+
 async def do_query_users():
     # Example function to query all users
     users = await User.all()
@@ -253,52 +284,73 @@ async def advanced_query():
     count = await User.filter(is_active=True).count()
     print(f"Count of active users: {count}")
 
-    # Get minimum/maximum values
-    min_age = await User.all().min("age")
-    max_age = await User.all().max("age")
-    print(f"Minimum age: {min_age}, Maximum age: {max_age}")
-
-    # Sum and average calculations
-    total_orders = await Order.all().sum("total_amount")
-    avg_order = await Order.all().avg("total_amount")
-    print(f"Total order amount: {total_orders}, Average order amount: {avg_order}")
-    return
-
     # Access related objects directly
     user = await User.get(id=1)
     orders = await user.orders.all()  # Get all orders for a user
+    print(f"Orders for user {user.username}: {orders}")
 
     # Filter on related objects
     paid_orders = await Order.filter(user__is_active=True, is_paid=True)
-
-    # Access reverse relations
-    user = await User.get(id=1)
-    user_orders = await user.orders.all()  # Using the ReverseRelation
+    print(f"Paid orders for active users: {paid_orders}")
 
     # Optimize queries by prefetching related data
     users = await User.all().prefetch_related("orders", "userinfo")
     for user in users:
         # No additional DB queries needed for these relations
-        print(user.orders)
-        print(user.userinfo)
+        print(
+            f"User: {user}, Orders: {await user.orders.all()} UserInfo: {await user.userinfo}"
+        )
 
     # Add computed fields to queryset
-    from tortoise.functions import Count
+    from tortoise.functions import Count, Avg, Sum, Min, Max
 
     users_with_order_count = await User.annotate(order_count=Count("orders")).filter(
         order_count__gt=0
     )
+    print(f"Users with at least one order: {users_with_order_count}")
+
+    # avg, min, max, sum examples
+    avg_age = await User.all().annotate(avg_age=Avg("age")).values("avg_age")
+    print(f"Average age of users: {avg_age}")
+    min_age = await User.all().annotate(min_age=Min("age")).values("min_age")
+    print(f"Minimum age of users: {min_age}")
+    max_age = await User.all().annotate(max_age=Max("age")).values("max_age")
+    print(f"Maximum age of users: {max_age}")
+    total_amount = (
+        await User.all().annotate(total_amount=Sum("amount")).values("total_amount")
+    )
+    print(f"Total amount of users: {total_amount}")
 
     # Execute raw SQL when needed
-    users = await User.raw("SELECT * FROM users WHERE is_active = %s", [True])
+    users = await User.raw("SELECT * FROM users WHERE is_active = True")
+    print(f"Active users (raw SQL): {users}")
 
     # Perform atomic operations
     from tortoise.transactions import in_transaction
 
     async with in_transaction() as connection:
-        user = await User.create(username="test", email="test@example.com")
-        await UserInfo.create(user=user, full_name="Test User")
-        # Both operations commit together or rollback together
+        try:
+            user = await User.create(
+                username="transaction_user",
+                email="transaction_user@example.com",
+                password="password",
+                age=30,
+                amount=500,
+                is_active=True,
+                is_superuser=False,
+            )
+            await UserInfo.create(user=user, full_name="Test User")
+        except Exception as e:
+            await connection.rollback()
+            print(f"Error creating user and user info in transaction: {e}")
+
+    print(f"Tried to create user and user info in transaction: {user}")
+    try:
+        user = await User.get(username="transaction_user")
+        print(f"Fetched user in transaction: {user}")
+    except Exception as e:
+        print(f"Error fetching user in transaction: {e}")
+    # Both operations commit together or rollback together
 
 
 if __name__ == "__main__":
@@ -309,6 +361,8 @@ if __name__ == "__main__":
     # Run the async functions
     # print("================Creating new users...================")
     # run_async(do_create_user())
+    # run_async(do_create_order())
+    # run_async(do_create_user_info())
     # print("================Querying all users...================")
     # run_async(do_query_users())
     # print("================Updating a user...================")

@@ -49,8 +49,12 @@
       - [query users](#query-users)
       - [Update user](#update-user)
       - [delete user](#delete-user)
-      - [advanced query](#advanced-query)
-        - [filter](#filter)
+    - [advanced query](#advanced-query)
+      - [filter](#filter)
+        - [and conditions](#and-conditions)
+        - [`update`](#update)
+        - [or conditions](#or-conditions)
+        - [`order_by`](#order_by)
 
 
 
@@ -1213,30 +1217,29 @@ async def do_delete_user():
 #### filter
 
 - `User.filter(key1=value1, key2=value2, ...)` will return a list of users that match the specified conditions
+
+##### and conditions
 - `User.filter(key1=value1, key2=value2, ...).update(key3=value3, ...)` will update the specified fields for all users that match the specified conditions
-- 
+
+##### `update`
+- `User.filter(is_active=True).update(is_superuser=False)` will update the specified fields for all active users
+
+##### or conditions
 
 ```python
-async def advanced_query():
+# OR conditions using Q objects
+from tortoise.expressions import Q
 
-    # Basic filtering
-    users = await User.filter(is_active=True)
-    print(f"Active users: {users}")
-
-    # Complex conditions with operators
-    users = await User.filter(username__icontains="john")
-    print(f"Users with 'john' in username: {users}")
-
-    # Multiple conditions (AND by default)
-    users = await User.filter(is_active=True, is_superuser=False)
-    print(f"Active non-superuser users: {users}")
-
-    # update Active status for users
-    await User.filter(is_active=True).update(is_superuser=False)
-
-    # OR conditions using Q objects
-    from tortoise.expressions import Q
-
-    users = await User.filter(Q(username="john") | Q(email="john@example.com"))
-    print(f"Users with username 'john' or email 'john@example.com': {users}")
+users = await User.filter(Q(username="john") | Q(email="john@example.com"))
+print(f"Users with username 'john' or email 'john@example.com': {users}")
 ```
+
+##### `order_by`
+
+- A '-' before the name will result in descending sort order, default is ascending.
+
+```python
+users = await User.all().order_by("-created_at")
+print(f"Users ordered by creation date descending: {users}")
+```
+
