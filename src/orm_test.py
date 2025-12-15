@@ -271,6 +271,18 @@ async def advanced_query():
     users = await User.filter(age__range=(25, 35))
     print(f"Users with age between 25 and 35: {users}")
 
+    # contains, startwith...
+    users = await User.filter(email__contains="example.com")
+    print(f"Users with 'example.com' in email: {users}")
+    users = await User.filter(username__icontains="john")
+    print(f"Users with 'john' in username (case-insensitive): {users}")
+    user = await User.get(username__iexact="JOHN_DOE_10")
+    print(f"User with username 'JOHN_DOE_10' (case-insensitive): {user}")
+    users = await User.filter(username__startswith="john_doe_1")
+    print(f"Users with username starting with 'john_doe_1': {users}")
+    users = await User.filter(username__endswith="5")
+    print(f"Users with username ending with '5': {users}")
+
     # Complex conditions with operators
     users = await User.filter(username__icontains="john")
     print(f"Users with 'john' in username: {users}")

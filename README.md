@@ -51,6 +51,8 @@
       - [delete user](#delete-user)
     - [Advanced Usage](#advanced-usage)
       - [filter](#filter)
+        - [ambiguous conditions](#ambiguous-conditions)
+        - [LIKE conditions](#like-conditions)
         - [and conditions](#and-conditions)
         - [`update`](#update)
         - [or conditions](#or-conditions)
@@ -1232,6 +1234,38 @@ async def do_delete_user():
 #### filter
 
 - `User.filter(key1=value1, key2=value2, ...)` will return a list of users that match the specified conditions
+
+##### ambiguous conditions
+
+```python
+#  lt, gt, ...
+users = await User.filter(age__gt=30)
+print(f"Users older than 30: {users}")
+users = await User.filter(age__lt=30)
+print(f"Users younger than 30: {users}")
+users = await User.filter(amount__gte=500)
+print(f"Users with amount greater than or equal to 500: {users}")
+users = await User.filter(amount__lte=300)
+print(f"Users with amount less than or equal to 300: {users}")
+
+# ambiguous query
+users = await User.filter(age__gt=25, age__lt=35)
+print(f"Users older than 25 and younger than 35: {users}")
+users = await User.filter(age__range=(25, 35))
+print(f"Users with age between 25 and 35: {users}")
+```
+##### LIKE conditions
+```python
+# contains, startwith...
+users = await User.filter(email__contains="example.com")
+print(f"Users with 'example.com' in email: {users}")
+users = await User.filter(username__icontains="john")
+print(f"Users with 'john' in username (case-insensitive): {users}")
+users = await User.filter(username__startswith="john_doe_1")
+print(f"Users with username starting with 'john_doe_1': {users}")
+users = await User.filter(username__endswith="5")
+print(f"Users with username ending with '5': {users}")
+```
 
 ##### and conditions
 - `User.filter(key1=value1, key2=value2, ...).update(key3=value3, ...)` will update the specified fields for all users that match the specified conditions
