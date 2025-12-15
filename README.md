@@ -55,6 +55,9 @@
         - [`update`](#update)
         - [or conditions](#or-conditions)
         - [`order_by`](#order_by)
+        - [`limit` and `offset`](#limit-and-offset)
+        - [`count`](#count)
+        - [access related objects](#access-related-objects)
 
 
 
@@ -1242,4 +1245,39 @@ print(f"Users with username 'john' or email 'john@example.com': {users}")
 users = await User.all().order_by("-created_at")
 print(f"Users ordered by creation date descending: {users}")
 ```
+
+##### `limit` and `offset`
+
+```python
+# Limit results (pagination)
+users = await User.all().limit(10).offset(20)
+print(f"Users with limit and offset: {users}")
+```
+
+##### `count`
+
+```python
+# Count records
+count = await User.filter(is_active=True).count()
+print(f"Count of active users: {count}")
+```
+
+##### access related objects
+
+```python
+# Access related objects directly
+user = await User.get(id=1)
+orders = await user.orders.all()  # Get all orders for a user
+print(f"Orders for user {user.username}: {orders}")
+
+# Filter on related objects
+paid_orders = await Order.filter(user__is_active=True, is_paid=True)
+print(f"Paid orders for active users: {paid_orders}")
+```
+
+`Order` class has a `user` field which is a foreign key to the `User` model, and `User` class has a property named `is_active`. 
+1. access related object directly: 
+   - use `user.orders.all()` to get all orders for a user, but could not filter by conditions.
+2. access related objects in filter:
+   - use the `Order.user__is_active=True` which means `Order.user.is_active=True` in filter function to access related objects' property.
 
