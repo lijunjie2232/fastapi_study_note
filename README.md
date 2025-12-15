@@ -49,7 +49,7 @@
       - [query users](#query-users)
       - [Update user](#update-user)
       - [delete user](#delete-user)
-    - [advanced query](#advanced-query)
+    - [Advanced Usage](#advanced-usage)
       - [filter](#filter)
         - [and conditions](#and-conditions)
         - [`update`](#update)
@@ -66,7 +66,10 @@
         - [Aggregate Functions](#aggregate-functions)
         - [Example Usage](#example-usage)
         - [Usage Patterns](#usage-patterns)
-      - [execute raw SQL](#execute-raw-sql)
+      - [Execute raw SQL](#execute-raw-sql)
+      - [Transactions](#transactions)
+        - [`in_transaction`](#in_transaction)
+        - [`atomic`](#atomic)
 
 
 
@@ -1220,7 +1223,7 @@ async def do_delete_user():
     print(f"Deleted user: {user}")
 ```
 
-### advanced query
+### Advanced Usage
 
 > Use `User.get(key=value)` to query a single user, however, if there are multiple users with the same username or no users with the specified username, it will raise an error.
 
@@ -1401,7 +1404,7 @@ print(sql)
 - `["name", "dt_format"]` is the list of arguments for the function `DATE_FORMAT`.
 - So `TruncMonth('created_at', '%Y-%m-%d'))` is equal to `DATE_FORMAT(created_at,'%Y-%m-%d')` in SQL.
 
-#### execute raw SQL
+#### Execute raw SQL
 
 ```python
 # Execute raw SQL when needed
@@ -1409,3 +1412,52 @@ users = await User.raw("SELECT * FROM users WHERE is_active = True")
 print(f"Active users (raw SQL): {users}")
 ```
 
+#### Transactions
+
+##### `in_transaction`
+
+```python
+# Perform atomic operations
+from tortoise.transactions import in_transaction
+
+async with in_transaction() as connection:
+    try:
+        user = await User.create(
+            username="transaction_user",
+            email="transaction_user@example.com",
+            password="password",
+            age=30,
+            amount=500,
+            is_active=True,
+            is_superuser=False,
+        )
+        await UserInfo.create(user=user, full_name="Test User")
+    except Exception as e:
+        await connection.rollback()
+        print(f"Error creating user and user info in transaction: {e}")
+
+print(f"Tried to create user and user info in transaction: {user}")
+try:
+    user = await User.get(username="transaction_user")
+    print(f"Fetched user in transaction: {user}")
+except Exception as e:
+    print(f"Error fetching user in transaction: {e}")
+# Both operations commit together or rollback together
+```
+
+##### `atomic`
+
+`atomic` decorator can be used to wrap a function in a transaction.
+
+```python
+from tortoise.transactions import atomic
+
+@atomic()
+async def atomic_function():
+    ...
+
+try:
+    await atomic_function()
+except OperationalError:
+    pass
+```

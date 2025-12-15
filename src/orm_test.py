@@ -255,6 +255,22 @@ async def advanced_query():
     users = await User.filter(is_active=True)
     print(f"Active users: {users}")
 
+    #  lt, gt, ...
+    users = await User.filter(age__gt=30)
+    print(f"Users older than 30: {users}")
+    users = await User.filter(age__lt=30)
+    print(f"Users younger than 30: {users}")
+    users = await User.filter(amount__gte=500)
+    print(f"Users with amount greater than or equal to 500: {users}")
+    users = await User.filter(amount__lte=300)
+    print(f"Users with amount less than or equal to 300: {users}")
+
+    # ambiguous query
+    users = await User.filter(age__gt=25, age__lt=35)
+    print(f"Users older than 25 and younger than 35: {users}")
+    users = await User.filter(age__range=(25, 35))
+    print(f"Users with age between 25 and 35: {users}")
+
     # Complex conditions with operators
     users = await User.filter(username__icontains="john")
     print(f"Users with 'john' in username: {users}")
