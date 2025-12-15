@@ -58,6 +58,8 @@
         - [`limit` and `offset`](#limit-and-offset)
         - [`count`](#count)
         - [access related objects](#access-related-objects)
+      - [prefetch related objects](#prefetch-related-objects)
+      - [`tortoise.functions`](#tortoisefunctions)
 
 
 
@@ -1280,4 +1282,18 @@ print(f"Paid orders for active users: {paid_orders}")
    - use `user.orders.all()` to get all orders for a user, but could not filter by conditions.
 2. access related objects in filter:
    - use the `Order.user__is_active=True` which means `Order.user.is_active=True` in filter function to access related objects' property.
+
+#### prefetch related objects
+
+```python
+# Optimize queries by prefetching related data
+users = await User.all().prefetch_related("orders", "userinfo")
+for user in users:
+    # No additional DB queries needed for these relations
+    print(
+        f"User: {user}, Orders: {await user.orders.all()} UserInfo: {await user.userinfo}"
+    )
+```
+
+#### `tortoise.functions`
 

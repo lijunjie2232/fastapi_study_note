@@ -304,6 +304,16 @@ async def advanced_query():
     # Add computed fields to queryset
     from tortoise.functions import Count, Avg, Sum, Min, Max
 
+    # Group by example
+    order_group = (
+        await Order.all()
+        .annotate(total_orders=Count("id"))
+        .group_by("user_id")
+        # .values("user_id", "total_orders")
+    )
+    print(f"Order count grouped by user: {order_group}")
+
+    #  Count example
     users_with_order_count = await User.annotate(order_count=Count("orders")).filter(
         order_count__gt=0
     )
