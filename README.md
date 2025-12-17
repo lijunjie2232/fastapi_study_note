@@ -73,6 +73,8 @@
         - [`in_transaction`](#in_transaction)
         - [`atomic`](#atomic)
       - [execute raw SQL](#execute-raw-sql-1)
+  - [Aerich](#aerich)
+    - [Installation](#installation-1)
 
 
 
@@ -1529,3 +1531,11 @@ async def do_raw_sql():
     for idx, row in enumerate(result[1], 1):
         print(f"Raw SQL query result {idx}: {row}")
 ```
+
+## Aerich
+
+Aerich is a database migration tool for Tortoise ORM. It helps to manage database schema changes and keep track of them.
+
+### Installation
+
+> install aerich by `pip install aerich`
