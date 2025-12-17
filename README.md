@@ -72,6 +72,7 @@
       - [Transactions](#transactions)
         - [`in_transaction`](#in_transaction)
         - [`atomic`](#atomic)
+      - [execute raw SQL](#execute-raw-sql-1)
 
 
 
@@ -1513,4 +1514,18 @@ try:
     await atomic_function()
 except OperationalError:
     pass
+```
+
+#### execute raw SQL
+
+```python
+async def do_raw_sql():
+    # Example function to execute raw SQL queries
+    # Fetch users using raw SQL
+    # query = "SELECT * FROM users WHERE id > 5"
+    sql = "SELECT * FROM users WHERE id > %s"
+    result = await Tortoise.get_connection("default").execute_query(sql, [95])
+    print(f"Raw SQL query result size: {result[0]}")
+    for idx, row in enumerate(result[1], 1):
+        print(f"Raw SQL query result {idx}: {row}")
 ```

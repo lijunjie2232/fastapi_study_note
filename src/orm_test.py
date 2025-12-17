@@ -429,6 +429,17 @@ async def related_query():
     print(f"Members: {await group.members.all()}")
 
 
+async def do_raw_sql():
+    # Example function to execute raw SQL queries
+    # Fetch users using raw SQL
+    # query = "SELECT * FROM users WHERE id > 5"
+    sql = "SELECT * FROM users WHERE id > %s"
+    result = await Tortoise.get_connection("default").execute_query(sql, [95])
+    print(f"Raw SQL query result size: {result[0]}")
+    for idx, row in enumerate(result[1], 1):
+        print(f"Raw SQL query result {idx}: {row}")
+
+
 if __name__ == "__main__":
     # Run the async initialization function
     run_async(init())
@@ -452,4 +463,5 @@ if __name__ == "__main__":
     # run_async(do_query_users())
     print("================Advanced query examples...================")
     # run_async(advanced_query())
-    run_async(related_query())
+    # run_async(related_query())
+    run_async(do_raw_sql())
