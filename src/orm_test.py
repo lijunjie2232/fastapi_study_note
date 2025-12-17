@@ -220,6 +220,20 @@ async def do_create_order():
         print(f"Created order: {order} for user: {user}")
 
 
+async def do_create_group():
+    # Example function to create a new group
+    import random
+
+    users = await User.all()
+    for i in range(10):
+        group = await Group.create(
+            name=f"Group_{i+1}",
+        )
+        print(f"Created group: {group}")
+        for user in random.sample(users, random.randint(2, 10)):
+            await group.members.add(user)
+
+
 async def do_query_users():
     # Example function to query all users
     users = await User.all()
@@ -233,6 +247,9 @@ async def do_update_user():
     user.email = "john@example.com"
     await user.save()
     print(f"Updated user: {user}")
+    user = await user.update_from_dict({"age": 35, "amount": 750})
+    await user.save()
+    print(f"Updated user with new age and amount: {user}")
 
 
 async def do_delete_user():
@@ -391,6 +408,27 @@ async def advanced_query():
     # Both operations commit together or rollback together
 
 
+async def related_query():
+    # Example function to demonstrate related queries
+    # Fetch a user and their related orders and user info
+    user = await User.get(
+        username="john_doe_10"
+    )  # .prefetch_related("orders", "userinfo")
+    print(f"User: {user}")
+    print(f"userinfo: {await user.userinfo}")
+    print(f"Orders: {await user.orders.all()}")
+
+    # Fetch an order and its related user
+    order = await Order.get(order_number="ORDER_00010").prefetch_related("user")
+    print(f"Order: {order}")
+    print(f"Related User: {await order.user}")
+
+    # Fetch a group and its members
+    group = await Group.get(name="Group_1").prefetch_related("members")
+    print(f"Group: {group}")
+    print(f"Members: {await group.members.all()}")
+
+
 if __name__ == "__main__":
     # Run the async initialization function
     run_async(init())
@@ -400,6 +438,7 @@ if __name__ == "__main__":
     # print("================Creating new users...================")
     # run_async(do_create_user())
     # run_async(do_create_order())
+    # run_async(do_create_group())
     # run_async(do_create_user_info())
     # print("================Querying all users...================")
     # run_async(do_query_users())
@@ -412,4 +451,5 @@ if __name__ == "__main__":
     # print("================Querying all users after deletion...================")
     # run_async(do_query_users())
     print("================Advanced query examples...================")
-    run_async(advanced_query())
+    # run_async(advanced_query())
+    run_async(related_query())

@@ -1200,6 +1200,7 @@ async def do_query_users():
 #### Update user
 
 - use `user = User.get(key=value)` to specify the user to update
+- use `user.update_from_dict(data)` to update the user with a dictionary of data
 - change the fields to update
 - save the changes by `user.save()`
 
@@ -1208,6 +1209,9 @@ async def do_update_user():
     # Example function to update a user
     user = await User.get(username="john_doe_1")
     user.email = "john@example.com"
+    await user.save()
+    print(f"Updated user: {user}")
+    user = await user.update_from_dict({"email": "john_doe_1@example.com"})
     await user.save()
     print(f"Updated user: {user}")
 ```
@@ -1329,14 +1333,29 @@ print(f"Paid orders for active users: {paid_orders}")
 
 #### prefetch related objects
 
+- use `prefetch_related` to optimize queries by prefetching related data.
+- `prefetch_related` will fetch related data in a single query, which can improve performance.
+- if not use `prefetch_related`, the access to related objects will trigger another query at first time of accessing related objects.
+
 ```python
 # Optimize queries by prefetching related data
-users = await User.all().prefetch_related("orders", "userinfo")
-for user in users:
-    # No additional DB queries needed for these relations
-    print(
-        f"User: {user}, Orders: {await user.orders.all()} UserInfo: {await user.userinfo}"
-    )
+async def related_query():
+    # Example function to demonstrate related queries
+    # Fetch a user and their related orders and user info
+    user = await User.get(username="john_doe_10").prefetch_related("orders", "userinfo")
+    print(f"User: {user}")
+    print(f"userinfo: {await user.userinfo}")
+    print(f"Orders: {await user.orders.all()}")
+
+    # Fetch an order and its related user
+    order = await Order.get(order_number="ORDER_00010").prefetch_related("user")
+    print(f"Order: {order}")
+    print(f"Related User: {await order.user}")
+
+    # Fetch a group and its members
+    group = await Group.get(name="Group_1").prefetch_related("members")
+    print(f"Group: {group}")
+    print(f"Members: {await group.members.all()}")
 ```
 
 #### `tortoise.functions`
