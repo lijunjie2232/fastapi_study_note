@@ -76,6 +76,7 @@
   - [Aerich](#aerich)
     - [Installation](#installation-1)
     - [Migration](#migration)
+    - [Update Schema](#update-schema)
 
 
 
@@ -1605,3 +1606,17 @@ Success writing schemas to database "aerich_test"
 ```
 
 > now, the tables are created in database and the auto generated migration file is created in a py file in migrations/models, which includes the changes made to the database and the sql commands to execute those changes.
+
+### Update Schema
+
+> use `aerich migrate` to create the new migration file based the state in current migration file
+```shell
+❯ aerich migrate
+Success creating migration file 1_20251219192230_update.py
+```
+
+> use `aerich upgrade` to update the schema
+```shell
+❯ aerich upgrade
+Success upgrading to 1_20251219192230_update.py
+```

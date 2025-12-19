@@ -130,6 +130,10 @@ class Order(Model):
         table_description = "Order table"  # Description for the table
 
 
+class AerichUpdateTest(Model):
+    id = IntField(pk=True, auto_increment=True)
+
+
 # Many-to-Many relationship example
 class Group(Model):
     id = IntField(
