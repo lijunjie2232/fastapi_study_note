@@ -75,6 +75,7 @@
       - [execute raw SQL](#execute-raw-sql-1)
   - [Aerich](#aerich)
     - [Installation](#installation-1)
+    - [Migration](#migration)
 
 
 
@@ -1539,3 +1540,68 @@ Aerich is a database migration tool for Tortoise ORM. It helps to manage databas
 ### Installation
 
 > install aerich by `pip install aerich`
+
+### Migration
+
+> write config py file
+```python
+# aerich_test.py
+from tortoise.contrib.fastapi import register_tortoise
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+TORTOISE_ORM = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.mysql",
+            "credentials": {
+                "host": "127.0.0.1",
+                "port": "13306",
+                "user": "root",
+                "password": "password",
+                "database": "aerich_test",
+            },
+        },
+    },
+    "apps": {
+        "models": {
+            "models": ["aerich.models", "src.orm_test"],
+            "default_connection": "default",
+        },
+    },
+}
+
+
+if __name__ == "__main__":
+    register_tortoise(
+        app,
+        config=TORTOISE_ORM,
+    )
+    import uvicorn
+
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=8000,
+        log_level="debug",
+    )
+```
+
+> create migration file (do not create table in database)
+```shell
+❯ aerich init -t src.aerich_test.TORTOISE_ORM
+Success writing aerich config to pyproject.toml
+Success creating migrations folder ./migrations
+```
+
+> create tables in database
+```shell
+❯ aerich init-db
+Success creating app migration folder migrations/models
+Success generating initial migration file for app "models"
+Success writing schemas to database "aerich_test"
+```
+
+> now, the tables are created in database and the auto generated migration file is created in a py file in migrations/models, which includes the changes made to the database and the sql commands to execute those changes.

@@ -4,6 +4,7 @@ PROJ_ROOT = Path(__file__).parent.resolve()
 CHUNK_SIZE = 1024 * 1024 * 32
 HASH_METHOD = "sha256"
 
+from .BinaryChunkMapManager import BinaryChunkMapManager, setup_file_and_chunk_map
 from .utils import (
     calculate_hash,
     calculate_optimal_chunk_size,
@@ -12,8 +13,6 @@ from .utils import (
     write_chunk,
     write_chunk_to_position,
 )
-
-from .BinaryChunkMapManager import BinaryChunkMapManager, setup_file_and_chunk_map
 
 __all__ = [
     "write_chunk_to_position",

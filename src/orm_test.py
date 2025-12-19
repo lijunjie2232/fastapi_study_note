@@ -1,19 +1,15 @@
 from typing import Optional
 
-from tortoise import (
-    Tortoise,
-    run_async,
-    Model,
-)
+from tortoise import Model, Tortoise, run_async
 from tortoise.fields import (
-    IntField,
-    CharField,
     BooleanField,
-    ForeignKeyField,
+    CharField,
     DatetimeField,
-    ReverseRelation,
-    OneToOneField,
+    ForeignKeyField,
+    IntField,
     ManyToManyField,
+    OneToOneField,
+    ReverseRelation,
 )
 
 
@@ -347,7 +343,7 @@ async def advanced_query():
         )
 
     # Add computed fields to queryset
-    from tortoise.functions import Count, Avg, Sum, Min, Max
+    from tortoise.functions import Avg, Count, Max, Min, Sum
 
     # Group by example
     order_group = (
@@ -461,7 +457,7 @@ if __name__ == "__main__":
     # run_async(do_delete_user())
     # print("================Querying all users after deletion...================")
     # run_async(do_query_users())
-    print("================Advanced query examples...================")
+    # print("================Advanced query examples...================")
     # run_async(advanced_query())
     # run_async(related_query())
-    run_async(do_raw_sql())
+    # run_async(do_raw_sql())
