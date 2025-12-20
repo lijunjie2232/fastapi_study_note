@@ -1598,6 +1598,9 @@ Success creating migrations folder ./migrations
 ```
 
 > create tables in database
+
+> !!! the database must be created before running this command or it will raise that could not connect to sql.
+
 ```shell
 ❯ aerich init-db
 Success creating app migration folder migrations/models
