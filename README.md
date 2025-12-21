@@ -1826,7 +1826,7 @@ async def read_users(*_, **__):
     return {}
 ```
 
-2. usage of database connection
+2. usage of database connection and initialization
 ```python
 def get_db():
     db = create_engine("postgresql://user:password@localhost/dbname")
@@ -1842,4 +1842,31 @@ async def get_features(db = Depends(get_db)):
     pass
 ```
 
+3. usage of write log
+```python
+import logging
 
+def log_request(request: Request):
+    logging.info(f"Request to {request.url}")
+    pass
+
+@app.get("/xxx", dependencies=[Depends(log_request)])
+async def xxx():
+    # do something
+    ...
+    pass
+```
+
+4. usage of cache
+```python
+from cachetools import cached, TTLCache
+
+@cached(cache=TTLCache(maxsize=100, ttl=300))
+def get_cached_features():
+    # get features from database
+    pass
+
+@app.get("/cached_features")
+async def cached_features(features = Depends(get_cached_features)):
+    return features
+```
