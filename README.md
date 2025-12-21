@@ -79,6 +79,16 @@
     - [Update Schema](#update-schema)
   - [**APIRouter**](#apirouter)
       - [Example](#example-4)
+  - [Project Structure](#project-structure)
+    - [Layered Architecture (Most Common)](#layered-architecture-most-common)
+      - [Core Configuration (core/)](#core-configuration-core)
+      - [Models and Schemas (models/, schemas/)](#models-and-schemas-models-schemas)
+      - [API Organization](#api-organization)
+      - [Data Access Layer](#data-access-layer)
+    - [Feature-Based Structure (Advanced)](#feature-based-structure-advanced)
+    - [Domain-Driven Design (DDD) Approach](#domain-driven-design-ddd-approach)
+  - [**Dependency Injection**](#dependency-injection)
+    - [Function Dependency Injection](#function-dependency-injection)
 
 
 
@@ -1672,4 +1682,164 @@ app.include_router(user_router_v1)
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
+
+## Project Structure
+
+### Layered Architecture (Most Common)
+
+
+#### Core Configuration (core/)
++ config.py: Environment variables and settings management
++ security.py: Authentication, password hashing, JWT handling
+
+#### Models and Schemas (models/, schemas/)
++ models/: Database ORM models (e.g., SQLAlchemy)
++ schemas/: Pydantic models for request/response validation
+
+#### API Organization
++ Versioned APIs in separate directories
++ Routers organized by resource/entity
++ Dependency injection via deps.py
+
+#### Data Access Layer
++ crud/: Create, Read, Update, Delete operations
++ Repository pattern for complex data access logic
+
+```yaml
+project/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # Application entry point
+│   ├── core/                   # Configuration and settings
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── security.py
+│   ├── models/                 # Database models (SQLAlchemy)
+│   │   ├── __init__.py
+│   │   └── user.py
+│   ├── schemas/                # Pydantic models for validation
+│   │   ├── __init__.py
+│   │   └── user.py
+│   ├── api/                    # API routes and endpoints
+│   │   ├── __init__.py
+│   │   ├── deps.py             # Dependencies
+│   │   ├── v1/                 # API version 1
+│   │   │   ├── __init__.py
+│   │   │   ├── routers/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── users.py
+│   │   │   │   └── items.py
+│   │   │   └── api.py          # API router aggregation
+│   │   └── v2/                 # Future API version
+│   ├── crud/                   # Database operations
+│   │   ├── __init__.py
+│   │   └── user.py
+│   ├── utils/                  # Utility functions
+│   │   ├── __init__.py
+│   │   └── helpers.py
+│   └── tests/                  # Test files
+│       ├── __init__.py
+│       ├── test_users.py
+│       └── conftest.py
+├── alembic/                    # Database migrations
+├── requirements.txt
+├── README.md
+└── Dockerfile
+```
+
+### Feature-Based Structure (Advanced)
+This approach groups code by features rather than technical layers:
+```yaml
+project/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── shared/                 # Shared components
+│   │   ├── core/
+│   │   ├── database/
+│   │   └── security/
+│   ├── users/                  # User feature module
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── service.py
+│   │   ├── router.py
+│   │   └── dependencies.py
+│   ├── products/               # Product feature module
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── service.py
+│   │   └── router.py
+│   └── orders/                 # Order feature module
+└── tests/
+    ├── users/
+    ├── products/
+    └── orders/
+```
+
+### Domain-Driven Design (DDD) Approach
+For complex applications with multiple bounded contexts:
+```yaml
+project/
+├── src/
+│   ├── __init__.py
+│   ├── bootstrap.py            # Application initialization
+│   ├── domain/                 # Business logic and entities
+│   │   ├── __init__.py
+│   │   ├── user/
+│   │   └── order/
+│   ├── application/            # Use cases and services
+│   │   ├── __init__.py
+│   │   ├── user_service.py
+│   │   └── order_service.py
+│   ├── infrastructure/         # External interfaces
+│   │   ├── __init__.py
+│   │   ├── database.py
+│   │   ├── repositories.py
+│   │   └── api_clients.py
+│   └── presentation/           # API layer
+│       ├── __init__.py
+│       ├── fastapi_app.py
+│       └── routers/
+├── tests/
+└── requirements.txt
+```
+## **Dependency Injection**
+
+dependency injection is a design pattern that allows to decouple the dependencies of application.
+
+### Function Dependency Injection
+
+1. usage of authorization token validation
+```python
+async def verify_key(token: str = Header()):
+    if token != "fake-super-token":
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+@app.get("/items/", dependencies=[Depends(verify_token),])
+async def read_items(*_, **__):
+    return {}
+
+@app.get("/users/", dependencies=[Depends(verify_token),])
+async def read_users(*_, **__):
+    return {}
+```
+
+2. usage of database connection
+```python
+def get_db():
+    db = create_engine("postgresql://user:password@localhost/dbname")
+    try:
+        yield db
+    finally:
+        db.dispose()
+
+@app.get("/features")
+async def get_features(db = Depends(get_db)):
+    # query database
+    ...
+    pass
+```
+
 
