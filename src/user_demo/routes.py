@@ -1,4 +1,4 @@
-from fastapi import HTTPException, APIRouter
+from fastapi import HTTPException, APIRouter, Header, Depends
 
 from models import UserModel
 from schemas import LoginForm, RegisterForm, UserInfo
@@ -19,4 +19,27 @@ async def login_user(item: LoginForm):
     user = await UserModel.get_or_none(email=item.email, password=item.password)
     if not user:
         return HTTPException(status_code=400, detail="Invalid credentials")
+    return UserInfo.model_validate(user.__dict__)
+
+
+async def fake_oauth2(_):
+    return "123@abcd.com"
+
+
+async def token_validate(token=Header(...)):
+    """Validate a token."""
+    if token != "123321":
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+
+@user_router_v1.get(
+    "/me",
+    response_model=UserInfo,
+)
+async def me(token: str = Depends(token_validate)):
+    """Get the current user."""
+    print(await fake_oauth2(token))
+    user = await UserModel.get_or_none(email=await fake_oauth2(token))
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid token")
     return UserInfo.model_validate(user.__dict__)
