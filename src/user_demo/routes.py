@@ -1,5 +1,4 @@
-from fastapi import HTTPException, APIRouter, Header, Depends
-
+from fastapi import APIRouter, Depends, Header, HTTPException
 from models import UserModel
 from schemas import LoginForm, RegisterForm, UserInfo
 

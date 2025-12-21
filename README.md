@@ -78,6 +78,7 @@
     - [Migration](#migration)
     - [Update Schema](#update-schema)
   - [**APIRouter**](#apirouter)
+      - [Usage](#usage)
       - [Example](#example-4)
   - [Project Structure](#project-structure)
     - [Layered Architecture (Most Common)](#layered-architecture-most-common)
@@ -1647,6 +1648,33 @@ Success upgrading to 1_20251219192230_update.py
 ## **APIRouter**
 
 APIRouter is a class provided by FastAPI that allows you to group related routes together. It provides a way to organize your routes and make them easier to manage and maintain.
+
+#### Usage
+
+```python
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix="/api/v1/admin",
+    tags=["admin"],
+    responses={
+        404: {
+            "description": "Not found",
+        },
+        403: {
+            "description": "Forbidden",
+        },
+        401: {
+            "description": "Unauthorized",
+        },
+    },
+    dependencies=[Depends(token_validate)],
+)
+```
+- `prefix`: A string that will be prepended to all the routes in this router.
+- `tags`: A list of strings that will be used as tags for the routes in this router.
+- `responses`: A dictionary that defines the responses for all the routes in this router.
+- `dependencies`: A list of dependencies that will be applied to all the routes in this router.
 
 #### Example
 
