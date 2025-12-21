@@ -77,6 +77,8 @@
     - [Installation](#installation-1)
     - [Migration](#migration)
     - [Update Schema](#update-schema)
+  - [**APIRouter**](#apirouter)
+      - [Example](#example-4)
 
 
 
@@ -1623,3 +1625,51 @@ Success creating migration file 1_20251219192230_update.py
 ❯ aerich upgrade
 Success upgrading to 1_20251219192230_update.py
 ```
+
+## **APIRouter**
+
+APIRouter is a class provided by FastAPI that allows you to group related routes together. It provides a way to organize your routes and make them easier to manage and maintain.
+
+#### Example
+
+```python
+# user_router.py
+from fastapi import HTTPException, APIRouter
+
+from models import UserModel
+from schemas import LoginForm, RegisterForm, UserInfo
+
+user_router_v1 = APIRouter(prefix="/api/v1/user")
+
+
+@user_router_v1.post("/register", response_model=UserInfo)
+async def register_user(item: RegisterForm):
+    """Register a new user."""
+    user = await UserModel.create(**item.model_dump(exclude={"password_confirm"}))
+    return UserInfo.model_validate(user.__dict__)
+
+
+@user_router_v1.post("/login", response_model=UserInfo)
+async def login_user(item: LoginForm):
+    """Login an existing user."""
+    user = await UserModel.get_or_none(email=item.email, password=item.password)
+    if not user:
+        return HTTPException(status_code=400, detail="Invalid credentials")
+    return UserInfo.model_validate(user.__dict__)
+```
+
+```python
+# main.py
+import uvicorn
+from fastapi import FastAPI
+
+from routes import user_router_v1
+
+app = FastAPI()
+app.include_router(user_router_v1)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
