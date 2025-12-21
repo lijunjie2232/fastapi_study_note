@@ -89,6 +89,8 @@
     - [Domain-Driven Design (DDD) Approach](#domain-driven-design-ddd-approach)
   - [**Dependency Injection**](#dependency-injection)
     - [Function Dependency Injection](#function-dependency-injection)
+    - [Class Dependency Injection](#class-dependency-injection)
+    - [Sub-Dependency Injection](#sub-dependency-injection)
 
 
 
@@ -1869,4 +1871,39 @@ def get_cached_features():
 @app.get("/cached_features")
 async def cached_features(features = Depends(get_cached_features)):
     return features
+```
+
+### Class Dependency Injection
+```python
+class CommonQueryParams:
+    def __init__(self, q: Optional[str] = None, skip: int = 0, limit: int = 100):
+        self.q = q
+        self.skip = skip
+        self.limit = limit
+
+@app.get("/items/")
+async def read_items(commons: CommonQueryParams = Depends(CommonQueryParams)):
+    return commons.__dict__
+
+@app.get("/users/")
+async def read_users(commons: CommonQueryParams = Depends(CommonQueryParams)):
+    return commons.__dict__
+```
+
+### Sub-Dependency Injection
+```python
+def query_extractor(q: Optional[str] = None):
+    return q
+
+def query_or_cookie_extractor(
+    q: str = Depends(query_extractor),
+    last_query: Optional[str] = None,
+):
+    if not q:
+        return last_query
+    return q
+
+@app.get("/items/")
+async def read_query(query_or_default: str = Depends(query_or_cookie_extractor)):
+    return {"q_or_default": query_or_default}
 ```
