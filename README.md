@@ -89,8 +89,14 @@
     - [Domain-Driven Design (DDD) Approach](#domain-driven-design-ddd-approach)
   - [**Dependency Injection**](#dependency-injection)
     - [Function Dependency Injection](#function-dependency-injection)
+      - [authorization validation](#authorization-validation)
+      - [database connection and initialization](#database-connection-and-initialization)
+      - [log wreiting](#log-wreiting)
+      - [Cache](#cache)
     - [Class Dependency Injection](#class-dependency-injection)
     - [Sub-Dependency Injection](#sub-dependency-injection)
+    - [Dependency Injection in Path](#dependency-injection-in-path)
+    - [Global Dependency Injection](#global-dependency-injection)
 
 
 
@@ -1813,7 +1819,7 @@ dependency injection is a design pattern that allows to decouple the dependencie
 
 ### Function Dependency Injection
 
-1. usage of authorization token validation
+#### authorization validation
 ```python
 async def verify_key(token: str = Header()):
     if token != "fake-super-token":
@@ -1828,7 +1834,7 @@ async def read_users(*_, **__):
     return {}
 ```
 
-2. usage of database connection and initialization
+#### database connection and initialization
 ```python
 def get_db():
     db = create_engine("postgresql://user:password@localhost/dbname")
@@ -1844,7 +1850,7 @@ async def get_features(db = Depends(get_db)):
     pass
 ```
 
-3. usage of write log
+#### log wreiting
 ```python
 import logging
 
@@ -1859,7 +1865,7 @@ async def xxx():
     pass
 ```
 
-4. usage of cache
+#### Cache
 ```python
 from cachetools import cached, TTLCache
 
@@ -1906,4 +1912,33 @@ def query_or_cookie_extractor(
 @app.get("/items/")
 async def read_query(query_or_default: str = Depends(query_or_cookie_extractor)):
     return {"q_or_default": query_or_default}
+```
+
+### Dependency Injection in Path
+```python
+async def verify_token(x_token: str = Header()):
+    if x_token != "fake-super-secret-token":
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+async def verify_key(x_key: str = Header()):
+    if x_key != "fake-super-secret-key":
+        raise HTTPException(status_code=400, detail="X-Key header invalid")
+
+@app.get("/items/", dependencies=[Depends(verify_token), Depends(verify_key)])
+async def read_items():
+    return [{"item": "Portal Gun"}, {"item": "Plumbus"}]
+```
+
+### Global Dependency Injection
+```python
+async def verify_token(x_token: str = Header()):
+    if x_token != "fake-super-secret-token":
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+async def verify_key(x_key: str = Header()):
+    if x_key != "fake-super-secret-key":
+        raise HTTPException(status_code=400, detail="X-Key header invalid")
+
+# add to FastAPI application
+app = FastAPI(dependencies=[Depends(verify_token), Depends(verify_key)])
 ```
