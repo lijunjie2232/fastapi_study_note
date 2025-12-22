@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -34,6 +35,30 @@ app.mount(
         directory=Path(__file__).parent / "static",
     ),
 )
+
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"Incoming request by method log_requests: {request.method} {request.url}")
+    response = await call_next(request)
+    print(f"Response status by method log_requests: {response.status_code}")
+    return response
+
+
+class LogRequestsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        print(
+            f"Incoming request by class LogRequestsMiddleware: {request.method} {request.url}"
+        )
+        response = await call_next(request)
+        print(
+            f"Response status by class LogRequestsMiddleware: {response.status_code}",
+        )
+        return response
+
+
+# add LogRequestsMiddleware
+app.add_middleware(LogRequestsMiddleware)
 
 
 # Endpoint that would typically require CORS

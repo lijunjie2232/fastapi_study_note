@@ -107,6 +107,7 @@
     - [Configuration in FastAPI](#configuration-in-fastapi)
     - [Security Considerations](#security-considerations)
     - [**Custom Middleware**](#custom-middleware)
+      - [Middleware Class](#middleware-class)
     - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
 
 
@@ -2145,6 +2146,46 @@ CORS_ALLOWED_HEADERS=Authorization,Content-Type,X-Requested-With
 
 ### **Custom Middleware**
 
+- there is two ways to create custom middleware
+  - by decorate a method with `@app.middleware("http")`
+  - by creating a class which inherits from `BaseHTTPMiddleware` (starlette.middleware.base.BaseHTTPMiddleware) and override `dispatch` method. Then, add it to FastAPI application by `app.add_middleware(CustomCORSMiddleware)`
+
+- **the two ways have no priority but the order of registration as middleware**.
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+
+# Method 1: Decorator
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"Incoming request by method log_requests: {request.method} {request.url}")
+    response = await call_next(request)
+    print(f"Response status by method log_requests: {response.status_code}")
+    return response
+
+# Method 2: Class
+class LogRequestsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        print(
+            f"Incoming request by class LogRequestsMiddleware: {request.method} {request.url}"
+        )
+        response = await call_next(request)
+        print(
+            f"Response status by class LogRequestsMiddleware: {response.status_code}",
+        )
+        return response
+
+
+# add LogRequestsMiddleware
+app.add_middleware(LogRequestsMiddleware)
+```
+
+#### Middleware Class
 - Dynamic Origin Validation: For more complex scenarios, validate origins dynamically
 
 ```python
