@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(
+    title="FastAPI Study Note",
+    description="FastAPI Study Note",
+    version="0.1.0",
+    openapi_url="/api/openapi.json",
+    exception_handlers={},
+)
 
 
 @app.get("/")

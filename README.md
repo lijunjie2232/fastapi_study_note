@@ -98,6 +98,7 @@
     - [Sub-Dependency Injection](#sub-dependency-injection)
     - [Dependency Injection in Path](#dependency-injection-in-path)
     - [Global Dependency Injection](#global-dependency-injection)
+  - [FastAPI Configuration](#fastapi-configuration)
 
 
 
@@ -1969,4 +1970,23 @@ async def verify_key(x_key: str = Header()):
 
 # add to FastAPI application
 app = FastAPI(dependencies=[Depends(verify_token), Depends(verify_key)])
+```
+
+## FastAPI Configuration
+
+- **title**: The title of the API.
+- **description**: A description of the API.
+- **version**: The version of the API.
+- **openapi_url**: The URL of the OpenAPI schema.
+- **exception_handlers**: A dictionary of exception handlers.
+- and so on ...
+
+```python
+app = FastAPI(
+    title="FastAPI Study Note",
+    description="FastAPI Study Note",
+    version="0.1.0",
+    openapi_url="/api/openapi.json",
+    exception_handlers={},
+)
 ```
