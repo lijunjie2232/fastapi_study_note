@@ -103,6 +103,11 @@
     - [exception\_handler decorator](#exception_handler-decorator)
     - [add\_exception\_handler method](#add_exception_handler-method)
     - [custom exception](#custom-exception)
+  - [FastAPI Middleware](#fastapi-middleware)
+    - [Configuration in FastAPI](#configuration-in-fastapi)
+    - [Security Considerations](#security-considerations)
+    - [**Custom Middleware**](#custom-middleware)
+    - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
 
 
 
@@ -2059,4 +2064,164 @@ def buy_coffee(balance: float = 10.0) -> dict:
         raise InsufficientFundsError(balance, price)
     return {"msg": "☕ 已下单！老板说送你一块曲奇～"}
 
+```
+
+## FastAPI Middleware
+- **CORS**: Cross-Origin Resource Sharing.  Cross-Origin Resource Sharing will happen when a frontend application tries to access a resource from a **different origin**.
+
+- **different origin**: different protocol, host, or port. 
+
+- Even though the same pc runs two web server, for example, a vue application served by nodejs and a fastapi application served by uvicorn, these two application will have different port, so, the two applications are considered to be different origins. 
+
+- A html served by a fastapi could access the same fastapi backend by js method which could not be considered as cross-origin.
+
+### Configuration in FastAPI
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# origins = [
+#     "http://localhost.tiangolo.com",
+#     "https://localhost.tiangolo.com",
+#     "http://localhost",
+#     "http://localhost:8080",
+# ]
+
+app.add_middleware(
+    CORSMiddleware,
+    # allow_origins=origins,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
+async def main():
+    return {"message": "Hello World"}
+```
+
+### Security Considerations
+
+1. Restrict Origins Explicitly: Instead of allowing all origins ("*"), specify exact domains
+
+2. Environment-Based Configuration: Use environment variables for flexible deployment
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import os
+
+app = FastAPI()
+
+# Read allowed origins from environment variable
+ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS", 
+    "https://yourdomain.com"
+).split(",")
+
+# Remove any whitespace
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=os.getenv("CORS_ALLOW_CREDENTIALS", "false").lower() == "true",
+    allow_methods=os.getenv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE").split(","),
+    allow_headers=os.getenv("CORS_ALLOWED_HEADERS", "Authorization,Content-Type").split(","),
+    max_age=600,  # Cache preflight requests for 10 minutes
+)
+```
+```bash
+# .env
+ENVIRONMENT=production
+CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+CORS_ALLOW_CREDENTIALS=false
+CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE
+CORS_ALLOWED_HEADERS=Authorization,Content-Type,X-Requested-With
+```
+
+### **Custom Middleware**
+
+- Dynamic Origin Validation: For more complex scenarios, validate origins dynamically
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import re
+
+
+app = FastAPI()
+
+class CustomCORSMiddleware(CORSMiddleware):
+    def is_allowed_origin(self, origin: str) -> bool:
+        """Check if origin is allowed based on pattern matching"""
+        allowed_patterns = [
+            r"^https://([a-zA-Z0-9-]+\.)*yourdomain\.com$",  # Main domain and subdomains
+            r"^https://([a-zA-Z0-9-]+\.)*yourotherdomain\.com$",  # Additional domains
+        ]
+        
+        # Allow localhost for development
+        if os.getenv("ENVIRONMENT") == "development":
+            allowed_patterns.append(r"^http://localhost:\d+$")
+            allowed_patterns.append(r"^http://127\.0\.0\.1:\d+$")
+        
+        for pattern in allowed_patterns:
+            if re.match(pattern, origin):
+                return True
+        return False
+
+app.add_middleware(
+    CustomCORSMiddleware,
+    allow_origins=[],  # Empty list since we're using custom validation
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    expose_headers=["Content-Disposition"],
+    max_age=600,
+)
+```
+
+### **Custom BaseHTTPMiddleware**
+
+- Additional Security Measures
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+import os
+
+app = FastAPI()
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        # validate origin headers
+        if not self.is_allowed_origin(request.headers.get("origin")):  # Custom method
+            raise HTTPException(status_code=403, detail="Invalid origin")
+
+        response = await call_next(request)
+        
+        # Additional security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        return response
+
+# Apply security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Restricted CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.getenv("CORS_ALLOWED_ORIGINS") else [],
+    allow_credentials=False,  # Disable unless absolutely necessary
+    allow_methods=["GET"],  # Minimal required methods
+    allow_headers=["Content-Type"],  # Minimal required headers
+    max_age=3600,  # Longer caching for production
+)
 ```
