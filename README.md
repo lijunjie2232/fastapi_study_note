@@ -107,7 +107,8 @@
     - [Configuration in FastAPI](#configuration-in-fastapi)
     - [Security Considerations](#security-considerations)
     - [**Custom Middleware**](#custom-middleware)
-      - [Middleware Class](#middleware-class)
+      - [CustomCORSMiddleware Class](#customcorsmiddleware-class)
+      - [internal advanced middleware in FastAPI](#internal-advanced-middleware-in-fastapi)
     - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
 
 
@@ -2185,7 +2186,7 @@ class LogRequestsMiddleware(BaseHTTPMiddleware):
 app.add_middleware(LogRequestsMiddleware)
 ```
 
-#### Middleware Class
+#### CustomCORSMiddleware Class
 - Dynamic Origin Validation: For more complex scenarios, validate origins dynamically
 
 ```python
@@ -2224,6 +2225,25 @@ app.add_middleware(
     max_age=600,
 )
 ```
+
+#### internal advanced middleware in FastAPI
+- `HTTPSRedirectMiddleware`: Redirects `HTTP` requests to `HTTPS` or `WS` requests to `WSS`
+- `TrustedHostMiddleware`: Checks if the request's host is trusted
+- `GZipMiddleware`: Compresses responses
+
+```python
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=["example.com", "*.example.com"]
+)
+app.add_middleware(HTTPSRedirectMiddleware)
+```
+
 
 ### **Custom BaseHTTPMiddleware**
 
