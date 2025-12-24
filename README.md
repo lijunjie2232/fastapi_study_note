@@ -119,6 +119,7 @@
     - [Email Consumer](#email-consumer)
     - [docker compose file](#docker-compose-file)
     - [Run Demo](#run-demo)
+  - [WebSockets Demo](#websockets-demo)
 
 
 
@@ -2729,3 +2730,144 @@ volumes:
 2. run email consumer: `python email_consumer.py`
 3. run fastapi server: `python main.py`
 
+## WebSockets Demo
+
+To use `WebSockets` in FastAPI, websockets should be installed by `pip install websockets`.
+
+```python
+# FastAPI WebSockets Demo
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from typing import List
+import asyncio
+from pydantic import BaseModel
+import random
+
+app = FastAPI()
+
+
+class WsMessage(BaseModel):
+    message: str
+    code: int
+    user_id: int
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    def __enter__(self):
+        self.__init__()
+        return self
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_str_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def send_json_message(self, data: dict, websocket: WebSocket):
+        await websocket.send_json(data)
+
+    async def send(self, websocket: WebSocket, message: WsMessage):
+        await websocket.send_json(message.model_dump())
+
+    async def broadcast_str(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+    async def broadcast_json(self, data: dict):
+        for connection in self.active_connections:
+            await connection.send_json(data)
+
+    async def broadcast(self, message: WsMessage):
+        for connection in self.active_connections:
+            await connection.send_json(message.model_dump())
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        for connection in self.active_connections:
+            try:
+                asyncio.create_task(connection.close())
+            except Exception as e:
+                print(f"Error closing connection: {e}")
+
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data.lower() == "bye~~":
+                await manager.send_str_message("bye~~", websocket)
+                manager.disconnect(websocket)
+                break
+            print(f"[Server] Received from Client #{client_id}: {data}")
+            await manager.send_str_message(f"You wrote: {data}", websocket)
+            await manager.send_json_message(
+                {"message": f"You wrote: {data}"}, websocket
+            )
+            await manager.send(
+                websocket,
+                WsMessage(
+                    message=f"Hello Client #{client_id}, you sent: {data}",
+                    code=200,
+                    user_id=client_id,
+                ),
+            )
+            await manager.send(
+                websocket,
+                WsMessage(
+                    message=f"seed : {random.randint(1000,9999)}",
+                    code=200,
+                    user_id=client_id,
+                ),
+            )
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        await manager.broadcast(
+            WsMessage(
+                message=f"Client #{client_id} disconnected",
+                code=1001,
+                user_id=client_id,
+            )
+        )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=8000,
+    )
+```
+
+- `async def websocket_endpoint(websocket: WebSocket, client_id: int)` to handle websocket connection.
+- `@app.websocket("/ws/{client_id}")` to register the websocket route.
+- `websocket`
+  - `.accept()` to accept the websocket connection, once this method is called, the websocket connection will be established.
+  - `.send_deninal_response()` to send a denial (deny) response to the client. (usually used when the client is not authorized to access the websocket)
+  - `.receive_text()` to receive text message from the client.
+  - `.receive_json()` to receive json message from the client.
+  - `.receive_bytes()` to receive bytes message from the client.
+  - `.send_text()` to send text message to the client.
+  - `.send_json()` to send json message to the client.
+  - `.send_bytes()` to send bytes message to the client.
+  - `.iter_text()` to iterate over text messages from the client.
+  - `.iter_json()` to iterate over json messages from the client.
+  - `.iter_bytes()` to iterate over bytes messages from the client.
+  - `.close()` to close the websocket connection.
+  - `.application_state` to get the application state.
+    - `WebSocketState.RESPONSE`(=3) to check if the websocket is in response state.
+    - `WebSocketState.DISCONNECTED`(=2) Connection closed.
+    - `WebSocketState.CONNECTED`(=1) Connection established and ready for send/receive.
+    - `WebSocketState.CONNECTING`(=0) Handshake in progress.
