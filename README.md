@@ -2403,6 +2403,7 @@ def request_verification_code(email: str) -> str:
   - `ch.basic_ack` is used to manually confirm that the message has been processed.
   - `ch.basic_nack` is used to manually reject the message and requeue it.
 - `request_verification_code` could generate a verification code and store it in Redis, then publish to the RabbitMQ.
+- <font color=red>**!!!** In the Whole Demo, the email code will be print only in function `send_verification_code` to simulate the email sending process.</font> So, only if the process of virtual email sending is successful, the verification code will be print.
 
 
 ### Redis Client
