@@ -110,6 +110,7 @@
       - [CustomCORSMiddleware Class](#customcorsmiddleware-class)
       - [internal advanced middleware in FastAPI](#internal-advanced-middleware-in-fastapi)
     - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
+  - [**Background Tasks**](#background-tasks)
 
 
 
@@ -2286,3 +2287,8 @@ app.add_middleware(
     max_age=3600,  # Longer caching for production
 )
 ```
+
+## **Background Tasks**
+
+1. create a docker RabbitMQ instance by ``
+2. 
