@@ -1,6 +1,7 @@
-import pika
 import json
-from typing import Dict, Any
+from typing import Any, Dict
+
+import pika
 from config import settings
 
 

@@ -1,8 +1,9 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+import json
+
+from email_service import request_verification_code
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
 from redis_client import redis_client
-from email_service import request_verification_code
-import json
 
 app = FastAPI(debug=True)
 

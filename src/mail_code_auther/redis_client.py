@@ -1,6 +1,7 @@
-import redis
 import json
 from typing import Optional
+
+import redis
 from config import settings
 
 

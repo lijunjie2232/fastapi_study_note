@@ -1,10 +1,11 @@
 from fastapi import FastAPI
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 from exceptions import (
-    http_exception_handler,
     InsufficientFundsError,
+    http_exception_handler,
     insufficient_handler,
 )
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI(
     title="FastAPI Study Note",

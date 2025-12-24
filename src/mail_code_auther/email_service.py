@@ -1,10 +1,9 @@
+import json
 import random
 import string
-from redis_client import redis_client
-import json
-
 
 from message_queue import message_queue
+from redis_client import redis_client
 
 
 def generate_verification_code(length: int = 6) -> str:
@@ -19,8 +18,9 @@ def send_verification_code(email: str, code: str):
     # 例如：smtplib, sendgrid, 或其他邮件服务
 
     # 模拟邮件发送过程
-    import time
     import random
+    import time
+
     import rich.progress
 
     with rich.progress.Progress() as progress:
