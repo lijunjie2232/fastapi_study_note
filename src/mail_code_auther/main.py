@@ -51,7 +51,10 @@ async def health_check():
         # 测试Redis连接
         redis_client.client.ping()
 
-        return {"status": "healthy", "services": ["redis", "rabbitmq"]}
+        return {
+            "status": "healthy",
+            "services": ["redis", "rabbitmq"],
+        }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service unavailable: {str(e)}")
 

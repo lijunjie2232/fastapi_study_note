@@ -112,9 +112,12 @@
     - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
   - [**Background Tasks**](#background-tasks)
     - [Demo Config](#demo-config)
-    - [email service](#email-service)
+    - [Email service](#email-service)
     - [Redis Client](#redis-client)
     - [Message Queue](#message-queue)
+    - [FastAPI Server](#fastapi-server)
+    - [docker compose file](#docker-compose-file)
+    - [Run Demo](#run-demo)
 
 
 
@@ -2323,7 +2326,7 @@ class Settings(BaseSettings):
 settings = Settings() # Singoton
 ```
 
-### email service
+### Email service
 
 > This part handles the code generation, the email sending function, and the callback function of email sending message from MessageQueue.
 
@@ -2395,9 +2398,11 @@ def request_verification_code(email: str) -> str:
         raise Exception("Failed to store verification code in Redis")
 ```
 
+
+
 ### Redis Client
 
-This part handles the redis connection and the verification code storage.
+> This part handles the redis connection and the verification code storage.
 
 ```python
 import redis
@@ -2467,7 +2472,7 @@ if __name__ == "__main__":
 
 ### Message Queue
 
-This part handles the message queue connection and the email task publishing to RabbitMQ.
+> This part handles the message queue connection and the email task publishing to RabbitMQ.
 
 ```python
 import pika
@@ -2565,7 +2570,120 @@ if __name__ == "__main__":
         )
 ```
 
+### FastAPI Server
+
+> This part handles the FastAPI server and the email verification process.
+
+```python
+from fastapi import FastAPI, BackgroundTasks, HTTPException
+from pydantic import BaseModel, EmailStr
+from redis_client import redis_client
+from email_service import request_verification_code
+import json
+
+app = FastAPI()
 
 
-1. create a docker RabbitMQ instance by ``
-2. 
+class EmailRequest(BaseModel):
+    email: EmailStr
+
+
+@app.post("/send_code/")
+async def send_verification_code(
+    request: EmailRequest, background_tasks: BackgroundTasks
+):
+    """发送验证码到邮箱"""
+    try:
+        background_tasks.add_task(request_verification_code, request.email)
+        print(f"Scheduled background task to send code to {request.email}")
+        return {
+            "message": "Verification code has being sent in the background.",
+            "email": request.email,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send verification code: {str(e)}"
+        )
+
+
+@app.post("/verify_code/")
+async def verify_code(email: str, code: str):
+    """验证验证码"""
+    stored_code = redis_client.get_verification_code(email)
+
+    if stored_code and stored_code == code:
+        # 验证成功后删除验证码
+        redis_client.delete_verification_code(email)
+        return {"message": "Verification successful"}
+    else:
+        raise HTTPException(
+            status_code=400, detail="Invalid or expired verification code"
+        )
+
+
+@app.get("/health")
+async def health_check():
+    """健康检查"""
+    try:
+        # 测试Redis连接
+        redis_client.client.ping()
+
+        return {
+            "status": "healthy",
+            "services": ["redis", "rabbitmq"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unavailable: {str(e)}")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=8000,
+    )
+
+```
+
+### docker compose file
+
+> Settings of ports, username and password should be the same as in the config.py file.
+
+```yaml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-mail-verification
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    container_name: rabbitmq-mail-verification
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  redis_data:
+  rabbitmq_data:
+```
+
+### Run Demo
+
+1. create a redis and RabbitMQ instance in docker by command: `docker compose up -d`
+2. run email consumer: `python email_consumer.py`
+3. run fastapi server: `python main.py`
+

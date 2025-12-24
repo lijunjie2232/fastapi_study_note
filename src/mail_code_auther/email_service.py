@@ -14,7 +14,7 @@ def generate_verification_code(length: int = 6) -> str:
 
 def send_verification_code(email: str, code: str):
     """发送验证邮件的模拟实现"""
-    print(f"Sending verification code {code} to {email}")
+    print(f"Sending verification code to {email}")
     # 这里可以集成真实的邮件发送服务
     # 例如：smtplib, sendgrid, 或其他邮件服务
 
@@ -59,7 +59,7 @@ def request_verification_code(email: str) -> str:
 
     if success:
         message_queue.publish_email_task(email, code)
-        print(f"Published email task for {email} with code {code}")
+        print(f"Published email task for {email}")
         return code
     else:
         raise Exception("Failed to store verification code in Redis")
