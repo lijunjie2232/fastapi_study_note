@@ -111,7 +111,9 @@
       - [internal advanced middleware in FastAPI](#internal-advanced-middleware-in-fastapi)
     - [**Custom BaseHTTPMiddleware**](#custom-basehttpmiddleware)
   - [**Background Tasks**](#background-tasks)
+    - [Demo Config](#demo-config)
     - [email service](#email-service)
+    - [Redis Client](#redis-client)
 
 
 
@@ -2293,9 +2295,36 @@ app.add_middleware(
 
 To explain the background task in FastAPI, i wrote a email verification code demo.
 
+### Demo Config
+
+> This part stored the configuration of redis and RabbitMQ, and settings of this demo.
+
+```python
+import os
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    redis_host: str = os.getenv("REDIS_HOST", "localhost")
+    redis_port: int = int(os.getenv("REDIS_PORT", 6379))
+    redis_password: str = os.getenv("REDIS_PASSWORD", "")
+
+    rabbitmq_host: str = os.getenv("RABBITMQ_HOST", "localhost")
+    rabbitmq_port: int = int(os.getenv("RABBITMQ_PORT", 5672))
+    rabbitmq_username: str = os.getenv("RABBITMQ_USERNAME", "admin")
+    rabbitmq_password: str = os.getenv("RABBITMQ_PASSWORD", "password")
+
+    # 验证码相关设置
+    verification_code_length: int = 6
+    verification_code_expire_seconds: int = 300  # 5分钟过期
+
+
+settings = Settings() # Singoton
+```
+
 ### email service
 
-this part handles the code generation, the email sending function, and the callback function of email sending message from MessageQueue.
+> This part handles the code generation, the email sending function, and the callback function of email sending message from MessageQueue.
 
 ```python
 import random
@@ -2363,6 +2392,76 @@ def request_verification_code(email: str) -> str:
         return code
     else:
         raise Exception("Failed to store verification code in Redis")
+```
+
+### Redis Client
+
+this part handles the redis connection and the verification code storage.
+
+```python
+import redis
+import json
+from typing import Optional
+from config import settings
+
+
+class RedisClient:
+    def __init__(self):
+        self.client = redis.Redis(
+            host=settings.redis_host,
+            port=settings.redis_port,
+            password=settings.redis_password,
+            decode_responses=True,
+            db=0,
+        )
+
+    def set_verification_code(self, email: str, code: str) -> bool:
+        """存储验证码到Redis"""
+        try:
+            key = f"verification_code:{email}"
+            # 验证码5分钟过期
+            result = self.client.setex(
+                name=key, time=settings.verification_code_expire_seconds, value=code
+            )
+            return result
+        except Exception as e:
+            print(f"Error setting verification code: {e}")
+            return False
+
+    def get_verification_code(self, email: str) -> Optional[str]:
+        """从Redis获取验证码"""
+        try:
+            key = f"verification_code:{email}"
+            code = self.client.get(key)
+            return code
+        except Exception as e:
+            print(f"Error getting verification code: {e}")
+            return None
+
+    def delete_verification_code(self, email: str) -> bool:
+        """删除验证码"""
+        try:
+            key = f"verification_code:{email}"
+            result = self.client.delete(key)
+            return result > 0
+        except Exception as e:
+            print(f"Error deleting verification code: {e}")
+            return False
+
+
+redis_client = RedisClient()
+
+if __name__ == "__main__":
+    # 测试Redis连接和方法
+    rc = RedisClient()
+    test_email = "test@example.com"
+    test_code = "123456"
+    rc.set_verification_code(test_email, test_code)
+    retrieved_code = rc.get_verification_code(test_email)
+    print(f"Retrieved code: {retrieved_code}")
+    rc.delete_verification_code(test_email)
+    deleted_code = rc.get_verification_code(test_email)
+    print(f"Code after deletion: {deleted_code}")
 ```
 
 
