@@ -116,6 +116,7 @@
     - [Redis Client](#redis-client)
     - [Message Queue](#message-queue)
     - [FastAPI Server](#fastapi-server)
+    - [Email Consumer](#email-consumer)
     - [docker compose file](#docker-compose-file)
     - [Run Demo](#run-demo)
 
@@ -2470,6 +2471,11 @@ if __name__ == "__main__":
     print(f"Code after deletion: {deleted_code}")
 ```
 
+- `RedisClient` is a very simple Redis client with basic functions for coding verification.
+  - `setex` means set with expiration time while `setnx` means set if not exists in redis.
+  - `.get` is used to get the value of a key in redis while `.getdel` is used to get and delete a key in redis, `.getdel` could not be used for the key user request could not match and verification code in redis will still be available.
+  - `.delete` is used to delete a key in redis.
+
 ### Message Queue
 
 > This part handles the message queue connection and the email task publishing to RabbitMQ.
@@ -2570,6 +2576,13 @@ if __name__ == "__main__":
         )
 ```
 
+- `consume_email_tasks` is a method that will always be called when a message is received from the queue, and always be waiting for new messages, so there would be no end point.
+  - `basic_consume` set callback function to handle new messages.
+  - `basic_qos` set QoS to 1, which means only one message will be processed at a time.
+  - `start_consuming` will start consuming messages and wait for new messages **which will never be ended**.
+- `publish_email_task` is a method that publishes a message to the queue with the email and verification code.
+  - `basic_publish` sends a message to the queue, `exchange` is empty, which means the message will be sent to the default exchange, `routing_key` is the queue name, `body` is the message body, `properties` is the message properties, `delivery_mode` is 2, which means the message will be persisted, "2" is the delivery mode which be `Transient` when value is `1` and be `Persistent` when value is `2`.
+
 ### FastAPI Server
 
 > This part handles the FastAPI server and the email verification process.
@@ -2646,6 +2659,28 @@ if __name__ == "__main__":
     )
 
 ```
+
+### Email Consumer
+
+> This part handles the email consumer service.
+
+```python
+import json
+import pika
+from message_queue import message_queue
+from email_service import process_email_task
+
+if __name__ == "__main__":
+    try:
+        # 启动邮件消费者服务
+        message_queue.consume_email_tasks(process_email_task)
+    except KeyboardInterrupt:
+        print("Email consumer stopped by user")
+```
+
+- `message_queue.consume_email_tasks` is a callback function that processes the email task.
+- If there is no message in the queue, the consumer will wait for a new message; if there is a message in the queue, the consumer will process it. (See the `MessageQueue.consume_email_tasks` function for details)
+
 
 ### docker compose file
 
