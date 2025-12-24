@@ -2398,7 +2398,11 @@ def request_verification_code(email: str) -> str:
     else:
         raise Exception("Failed to store verification code in Redis")
 ```
-
+- `send_verification_code` is a function that simulates the process of sending an email with a verification code.
+- `process_email_task` is a callback function that processes the email task from the message queue (see `MessageQueue.consume_email_tasks` and `email_consumer.py` for details)
+  - `ch.basic_ack` is used to manually confirm that the message has been processed.
+  - `ch.basic_nack` is used to manually reject the message and requeue it.
+- `request_verification_code` could generate a verification code and store it in Redis, then publish to the RabbitMQ.
 
 
 ### Redis Client
@@ -2657,8 +2661,10 @@ if __name__ == "__main__":
         host="127.0.0.1",
         port=8000,
     )
-
 ```
+
+- in `send_code` route, the background task is scheduled to send the verification code to the email, and directly returns a "email has been sent" result to the user without waiting for the result of email, redis and RabbitMQ components.
+- `verify_code` route is used to verify the verification code, and the verification code is retrieved from redis. code will be get by function  `redis_client.get_verification_code` and compared in FastAPI function. If matched, the verification code will be invalid and will be deleted from redis by function `redis_client.delete_verification_code`.
 
 ### Email Consumer
 
