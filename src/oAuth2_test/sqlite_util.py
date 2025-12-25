@@ -3,7 +3,7 @@
 from tortoise import Tortoise, Model
 from tortoise.fields import CharField, IntField, BooleanField
 
-from pass_util import get_password_hash
+from pass_util import get_password_hash, verify_password
 
 TORTOISE_ORM = {
     "connections": {
@@ -66,7 +66,7 @@ async def authenticate_user(email: str, password: str):
     user = await User.get_or_none(email=email)
     if not user:
         return None
-    if not user.password_hash == await get_password_hash(password):
+    if not await verify_password(password, user.password_hash):
         return None
     return user
 

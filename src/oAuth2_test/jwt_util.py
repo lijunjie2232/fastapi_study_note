@@ -1,6 +1,7 @@
 import jwt
 import time
 import tqdm
+import json
 from datetime import datetime, timedelta, timezone
 
 # import secrets
@@ -32,9 +33,9 @@ def decode_jwt(token, secret=SECURITY_KEY, algorithms=["HS256"]):
         decoded = jwt.decode(token, secret, algorithms=algorithms)
         return decoded
     except jwt.ExpiredSignatureError:
-        return "Token has expired"
+        raise Exception("Token has expired")
     except jwt.InvalidTokenError:
-        return "Invalid token"
+        raise Exception("Invalid token")
 
 
 def create_access_token(
@@ -53,9 +54,13 @@ def create_access_token(
 if __name__ == "__main__":
     # generate a sample JWT
     sample_payload = {"user_id": 123, "role": "admin"}
-    token = generate_jwt(
-        sample_payload,
-        expires_in=2,  # token expires in 5 seconds
+    # token = generate_jwt(
+    #     sample_payload,
+    #     expires_in=2,  # token expires in 5 seconds
+    # )
+    token = create_access_token(
+        data=sample_payload,
+        expires_delta=timedelta(seconds=2),
     )
     print("Generated JWT:")
     print(token)
@@ -63,8 +68,14 @@ if __name__ == "__main__":
     # decode the sample JWT
     decoded_payload = decode_jwt(token)
     print("[Result] Decoded JWT payload:", decoded_payload)
-    print("[Result] Decoded with wrong key:", decode_jwt(token, secret="wrongkey"))
+    try:
+        print("[Result] Decoded with wrong key:", decode_jwt(token, secret="wrongkey"))
+    except Exception as e:
+        print("[Result] Decoding with wrong key failed:", str(e))
     print("* Decoded with expired token:")
     for _ in tqdm.tqdm(range(3), desc="Waiting for token to expire"):
         time.sleep(1)  # wait for token to expire
-    print("[Result] ", decode_jwt(token))
+    try:
+        print("[Result] ", decode_jwt(token))
+    except Exception as e:
+        print("[Result] Decoding expired token failed:", str(e))
