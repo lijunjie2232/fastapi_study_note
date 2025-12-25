@@ -2938,4 +2938,13 @@ if __name__ == "__main__":
 
 > JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. It is commonly used for authentication and authorization purposes.
 
+- a JWT string consists of three parts separated by dots (.), which are:
+  - Header: A JSON object that describes the **type** of token and the **signing algorithm type** used. The Header is encoded in base64 and concat with a dot (.) and then the Payload.
+  - Payload: A JSON object that contains the claims. The Payload is encoded in base64 and concat with a dot (.) and then the Signature.
+    - iss: The issuer of the token.
+    - sub: The subject of the tdoken.
+    - aud: The audience of the token.
+    - exp: The expiration time of the token.
+    - at: The time when the token was issued.
+  - Signature: A cryptographic signature that verifies the integrity of the token. The Signature is created using the former encoded part (Header and Payload), and a secret key, encoding in the algorithm specified in the Header, which is to ensure the whole JWT is tamper-proof.
 
