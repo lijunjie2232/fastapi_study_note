@@ -123,6 +123,7 @@
   - [OAuth2.0](#oauth20)
     - [passlib](#passlib)
       - [Usage](#usage-1)
+    - [JWT (JSON Web Token)](#jwt-json-web-token)
 
 
 
@@ -2879,7 +2880,10 @@ if __name__ == "__main__":
 
 ### passlib
 
-`passlib` is a Python library for password hashing and verification. It provides a simple, yet secure way to store and verify passwords.
+> `passlib` is a Python library for password hashing and verification. It provides a simple, yet secure way to store and verify passwords.
+
+- `pip install passlib` to install passlib
+- to use "argon2", use `pip install "passlib[argon2]"` to install backend
 
 #### Usage
 
@@ -2929,3 +2933,9 @@ if __name__ == "__main__":
 - `ctx = CryptContext(schemes=["sha256_crypt"], deprecated="auto")` to create a CryptContext object, while "sha256_crypt" is a algorithm.
 - `hashed = ctx.hash(password)` to hash a password using the specified algorithm.
 - `ctx.verify(password, hashed)` to verify a password against a hashed password.
+
+### JWT (JSON Web Token)
+
+> JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. It is commonly used for authentication and authorization purposes.
+
+
