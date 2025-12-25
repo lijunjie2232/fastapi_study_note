@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from passlib.hash import sha256_crypt, pbkdf2_sha256, scrypt, argon2
+from passlib.hash import argon2, pbkdf2_sha256, scrypt, sha256_crypt
 
 algorithms = {
     "sha256_crypt": sha256_crypt,

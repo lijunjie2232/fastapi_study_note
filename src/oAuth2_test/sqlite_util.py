@@ -1,9 +1,8 @@
 # sqlite client and schema
 
-from tortoise import Tortoise, Model
-from tortoise.fields import CharField, IntField, BooleanField
-
 from pass_util import get_password_hash, verify_password
+from tortoise import Model, Tortoise
+from tortoise.fields import BooleanField, CharField, IntField
 
 TORTOISE_ORM = {
     "connections": {

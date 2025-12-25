@@ -1,15 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.params import Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-
-from sqlite_util import (
-    create_user,
-    authenticate_user,
-    TORTOISE_ORM,
-    get_user_by_id,
-)
 from jwt_util import create_access_token, decode_jwt
+from pydantic import BaseModel
+from sqlite_util import TORTOISE_ORM, authenticate_user, create_user, get_user_by_id
 from tortoise.contrib.fastapi import register_tortoise
 
 app = FastAPI()

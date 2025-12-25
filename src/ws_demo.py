@@ -1,10 +1,11 @@
 # FastAPI WebSockets Demo
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List
 import asyncio
-from pydantic import BaseModel
 import random
+from typing import List
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 
 app = FastAPI()
 

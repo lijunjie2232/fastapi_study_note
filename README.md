@@ -129,6 +129,9 @@
       - [OAuth2PasswordBearer](#oauth2passwordbearer)
       - [Theory of OAuth2.0](#theory-of-oauth20)
       - [OAuth2.0 Demo](#oauth20-demo)
+        - [main](#main)
+        - [sqlite util](#sqlite-util)
+        - [jwt util](#jwt-util)
 
 
 
@@ -3082,85 +3085,7 @@ async def get_current_user(
 
 #### OAuth2.0 Demo
 
-```python
-# sqlite_util.py
-# sqlite client and schema
-
-from tortoise import Tortoise, Model
-from tortoise.fields import CharField, IntField, BooleanField
-
-from pass_util import get_password_hash, verify_password
-
-TORTOISE_ORM = {
-    "connections": {
-        "default": {
-            "engine": "tortoise.backends.sqlite",
-            "credentials": {"file_path": "db.sqlite3"},
-        },
-    },
-    "apps": {
-        "models": {
-            "models": ["aerich.models", "sqlite_util"],
-            "default_connection": "default",
-        },
-    },
-}
-
-
-################### User Schema ###################
-
-
-class User(Model):
-    id = IntField(
-        pk=True,
-        auto_increment=True,
-        description="id of user",
-    )
-    username = CharField(
-        max_length=255,
-        description="username of user",
-    )
-    email = CharField(
-        max_length=255,
-        description="email of user",
-    )
-    password_hash = CharField(
-        max_length=255,
-        description="hashed password of user",
-    )
-    is_active = BooleanField(
-        default=True,
-        description="is user active",
-    )
-
-
-################### User Service ###################
-
-
-async def create_user(username, email, password):
-    if await User.get_or_none(email=email):
-        return None
-    user = await User.create(
-        username=username,
-        email=email,
-        password_hash=await get_password_hash(password),
-    )
-    return user
-
-
-async def authenticate_user(email: str, password: str):
-    user = await User.get_or_none(email=email)
-    if not user:
-        return None
-    if not await verify_password(password, user.password_hash):
-        return None
-    return user
-
-
-async def get_user_by_id(id: int):
-    user = await User.get_or_none(id=id)
-    return user
-```
+##### main
 
 ```python
 # main.py
@@ -3248,3 +3173,139 @@ if __name__ == "__main__":
 > `login` will verify user with password, and create a token include user_id for user if user password is valid.
 
 > `read_users_me` will get bearer token by `Depends(oauth2_scheme)`, and decode it by `decode_jwt(token)` to get user_id.
+
+##### sqlite util
+```python
+# sqlite client and schema
+
+from tortoise import Tortoise, Model
+from tortoise.fields import CharField, IntField, BooleanField
+
+from pass_util import get_password_hash, verify_password
+
+TORTOISE_ORM = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.sqlite",
+            "credentials": {"file_path": "db.sqlite3"},
+        },
+    },
+    "apps": {
+        "models": {
+            "models": ["aerich.models", "sqlite_util"],
+            "default_connection": "default",
+        },
+    },
+}
+
+
+################### User Schema ###################
+
+
+class User(Model):
+    id = IntField(
+        pk=True,
+        auto_increment=True,
+        description="id of user",
+    )
+    username = CharField(
+        max_length=255,
+        description="username of user",
+    )
+    email = CharField(
+        max_length=255,
+        description="email of user",
+    )
+    password_hash = CharField(
+        max_length=255,
+        description="hashed password of user",
+    )
+    is_active = BooleanField(
+        default=True,
+        description="is user active",
+    )
+
+
+################### User Service ###################
+
+
+async def create_user(username, email, password):
+    if await User.get_or_none(email=email):
+        return None
+    user = await User.create(
+        username=username,
+        email=email,
+        password_hash=await get_password_hash(password),
+    )
+    return user
+
+
+async def authenticate_user(email: str, password: str):
+    user = await User.get_or_none(email=email)
+    if not user:
+        return None
+    if not await verify_password(password, user.password_hash):
+        return None
+    return user
+
+
+async def get_user_by_id(id: int):
+    user = await User.get_or_none(id=id)
+    return user
+```
+
+##### jwt util
+
+```python
+import jwt
+import time
+import tqdm
+import json
+from datetime import datetime, timedelta, timezone
+
+# import secrets
+
+# print(secrets.token_hex(32))
+# exit(0)
+
+SECURITY_ALGORITHM = "HS256"
+SECURITY_KEY = "e3c56abd1523a8fd4b73da842c272d1cf8a42acc78aafbd18890daaa2feb4755"
+
+
+def generate_jwt(payload, secret=SECURITY_KEY, algorithm="HS256", expires_in=None):
+    if expires_in is not None:
+        import datetime
+
+        payload["exp"] = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
+            seconds=expires_in
+        )
+    token = jwt.encode(
+        payload,
+        secret,
+        algorithm=algorithm,
+    )
+    return token
+
+
+def decode_jwt(token, secret=SECURITY_KEY, algorithms=["HS256"]):
+    try:
+        decoded = jwt.decode(token, secret, algorithms=algorithms)
+        return decoded
+    except jwt.ExpiredSignatureError:
+        raise Exception("Token has expired")
+    except jwt.InvalidTokenError:
+        raise Exception("Invalid token")
+
+
+def create_access_token(
+    data: dict, expires_delta: timedelta | None = timedelta(seconds=60 * 60 * 24)
+):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECURITY_KEY, algorithm=SECURITY_ALGORITHM)
+    return encoded_jwt
+```
