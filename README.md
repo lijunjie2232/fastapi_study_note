@@ -125,6 +125,8 @@
       - [Usage](#usage-1)
     - [JWT (JSON Web Token)](#jwt-json-web-token)
       - [Usage](#usage-2)
+    - [OAuth2.0 in FastAPI](#oauth20-in-fastapi)
+      - [OAuth2PasswordBearer](#oauth2passwordbearer)
 
 
 
@@ -2966,9 +2968,8 @@ SECURITY_KEY = "e3c56abd1523a8fd4b73da842c272d1cf8a42acc78aafbd18890daaa2feb4755
 
 def generate_jwt(payload, secret=SECURITY_KEY, algorithm="HS256", expires_in=None):
     if expires_in is not None:
-        import datetime
 
-        payload["exp"] = datetime.datetime.utcnow() + datetime.timedelta(
+        payload["exp"] = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
             seconds=expires_in
         )
     token = jwt.encode(
@@ -3007,4 +3008,24 @@ if __name__ == "__main__":
     for _ in tqdm.tqdm(range(3), desc="Waiting for token to expire"):
         time.sleep(1)  # wait for token to expire
     print("[Result] ", decode_jwt(token))
+```
+- `jwt.encode(payload, secret, algorithm="HS256")` to encode a payload into a JWT string.
+- `jwt.decode(token, secret, algorithms=["HS256"])` to decode a JWT string into a payload.
+- `jwt.ExpiredSignatureError` to catch expired token.
+- `jwt.InvalidTokenError` to catch invalid token.
+
+- set expire time: set key `exp` in payload with a deadline timestamp or datetime object **in UTC**
+
+### OAuth2.0 in FastAPI
+
+#### OAuth2PasswordBearer
+
+> `OAuth2PasswordBearer` used as dependency to get a valid access token from the request.
+
+```python
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@app.get("/users/me")
+async def read_users_me(token: str = Depends(oauth2_scheme)):
+    pass
 ```

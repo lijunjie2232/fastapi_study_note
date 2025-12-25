@@ -15,7 +15,7 @@ def generate_jwt(payload, secret=SECURITY_KEY, algorithm="HS256", expires_in=Non
     if expires_in is not None:
         import datetime
 
-        payload["exp"] = datetime.datetime.utcnow() + datetime.timedelta(
+        payload["exp"] = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
             seconds=expires_in
         )
     token = jwt.encode(
