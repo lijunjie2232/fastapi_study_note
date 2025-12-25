@@ -1625,12 +1625,12 @@ TORTOISE_ORM = {
     },
 }
 
+register_tortoise(
+    app,
+    config=TORTOISE_ORM,
+)
 
 if __name__ == "__main__":
-    register_tortoise(
-        app,
-        config=TORTOISE_ORM,
-    )
     import uvicorn
 
     uvicorn.run(
@@ -1651,6 +1651,8 @@ Success creating migrations folder ./migrations
 > create tables in database
 
 > !!! the database must be created before running this command or it will raise that could not connect to sql.
+
+> <font color="red">DO NOT PUT `register_tortoise` IN CONDITION `if __name__ == "__main__":` or project might not registe it.</font>
 
 ```shell
 ❯ aerich init-db

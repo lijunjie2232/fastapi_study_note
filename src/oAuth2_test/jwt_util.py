@@ -1,6 +1,7 @@
 import jwt
 import time
 import tqdm
+from datetime import datetime, timedelta, timezone
 
 # import secrets
 
@@ -34,6 +35,19 @@ def decode_jwt(token, secret=SECURITY_KEY, algorithms=["HS256"]):
         return "Token has expired"
     except jwt.InvalidTokenError:
         return "Invalid token"
+
+
+def create_access_token(
+    data: dict, expires_delta: timedelta | None = timedelta(seconds=60 * 60 * 24)
+):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECURITY_KEY, algorithm=SECURITY_ALGORITHM)
+    return encoded_jwt
 
 
 if __name__ == "__main__":
