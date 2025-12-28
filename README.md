@@ -3504,7 +3504,7 @@ async def test_async_iter():
 > Async context managers are used to manage resources that need to be set up and torn down asynchronously.
 
 - A Context Manager is used to implement the `__enter__` and `__exit__` methods.
-- An Async Context Manager need to implement the `__aenter__` and `__aexit__` methods.
+- An Async Context Manager need to implement the `__aenter__` and `__aexit__` methods. <font color="red">**注意**: `__aenter__`と`__aexit__`は非同期関数である。</font>
 
 ```python
 class AsyncContextManager(object):
@@ -3544,3 +3544,7 @@ result:
 ```shell
 {'args': {'foo': 'bar'}, 'headers': {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Host': 'httpbin.org', 'User-Agent': 'python-httpx/0.28.1', ...
 ```
+
+- `await client.get` will not block the event loop.
+- while call the `async with AsyncContextManager() as acm`, the code in `__aenter__` will be executed but not block the event loop if there is some i/o operation like sql connection.
+
