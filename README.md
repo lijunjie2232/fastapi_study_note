@@ -139,6 +139,7 @@
     - [Task](#task)
     - [Future](#future)
     - [Async Iterator](#async-iterator)
+    - [Async Context Manager](#async-context-manager)
 
 
 
@@ -3497,3 +3498,49 @@ async def test_async_iter():
 ```
 
 一般的な使用例は：　データソースを非同期的に読み込む
+
+### Async Context Manager
+
+> Async context managers are used to manage resources that need to be set up and torn down asynchronously.
+
+- A Context Manager is used to implement the `__enter__` and `__exit__` methods.
+- An Async Context Manager need to implement the `__aenter__` and `__aexit__` methods.
+
+```python
+class AsyncContextManager(object):
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def read(self):
+        return _DATA
+
+
+async def test_async_context_manager():
+    async with AsyncContextManager() as acm:
+        logger.debug(await acm.read())
+```
+
+使用例:
+
+```python
+async def main():
+    import httpx
+
+    url = "https://httpbin.org/get"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url,
+            params={"foo": "bar"},
+        )
+        logger.debug(response.json())
+```
+result: 
+
+```shell
+{'args': {'foo': 'bar'}, 'headers': {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Host': 'httpbin.org', 'User-Agent': 'python-httpx/0.28.1', ...
+```

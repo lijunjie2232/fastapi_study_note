@@ -90,7 +90,35 @@ async def test_async_iter():
         logger.debug(line)
 
 
+class AsyncContextManager(object):
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def read(self):
+        return _DATA
+
+
+async def test_async_context_manager():
+    async with AsyncContextManager() as acm:
+        logger.debug(await acm.read())
+    import httpx
+
+    url = "https://httpbin.org/get"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url,
+            params={"foo": "bar"},
+        )
+        logger.debug(response.json())
+
+
 if __name__ == "__main__":
     _LOOP.run_until_complete(my_function(1))
-    # asyncio.run(main())
+    asyncio.run(main())
     asyncio.run(test_async_iter())
+    asyncio.run(test_async_context_manager())
