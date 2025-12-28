@@ -137,7 +137,8 @@
     - [Basic Usage](#basic-usage)
     - [event\_Loop](#event_loop)
     - [Task](#task)
-  - [Future](#future)
+    - [Future](#future)
+    - [Async Iterator](#async-iterator)
 
 
 
@@ -3432,7 +3433,7 @@ __main__:main:33 - id:5 is done
 __main__:main:33 - id:6 is done
 ```
 
-## Future
+### Future
 
 > A `Future` is a special low-level object that represents an eventual result of an asynchronous operation.
 
@@ -3453,3 +3454,46 @@ logger.debug(f"fut: {fut}")
 result = await fut
 logger.debug(result)
 ```
+
+### Async Iterator
+
+> Async iterators are used to iterate over asynchronous data sources.
+
+```python
+class VirtualReader(object):
+    # this is a async Iterator
+
+    def __init__(self):
+        self.count = 0
+        self.data = []
+        self.init()
+
+    def init(self):
+        self.count = 0
+        self.data = _DATA.split("\n")
+
+    async def readline(self):
+        if self.count >= len(self.data):
+            return None
+        val = self.data[self.count]
+        self.count += 1
+        return val
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        await asyncio.sleep(1)
+        val = await self.readline()
+        if val == None:
+            self.init()
+            raise StopAsyncIteration
+        return val
+
+
+async def test_async_iter():
+    async for line in VirtualReader():
+        logger.debug(line)
+```
+
+一般的な使用例は：　データソースを非同期的に読み込む
