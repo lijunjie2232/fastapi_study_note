@@ -132,6 +132,9 @@
         - [main](#main)
         - [sqlite util](#sqlite-util)
         - [jwt util](#jwt-util)
+  - [Asyncio](#asyncio)
+    - [主要概念](#主要概念)
+    - [Basic Usage](#basic-usage)
 
 
 
@@ -3309,3 +3312,31 @@ def create_access_token(
     encoded_jwt = jwt.encode(to_encode, SECURITY_KEY, algorithm=SECURITY_ALGORITHM)
     return encoded_jwt
 ```
+
+## Asyncio
+
+### 主要概念
+
+- `event_Loop`(イベントループ): すべての asyncio アプリケーションの核となるもので、非同期タスクの管理と実行を行う
+- `Coroutine`(コルーチン): 時停止および再開可能な特別な関数（async def で定義）
+- `Task`: 行実行するためにコルーチンをラップしたオブジェクト
+- `Future`: 非同期操作の結果を表すオブジェクト
+
+### Basic Usage
+
+```python
+import asyncio
+
+async def my_function():
+    await asyncio.sleep(1)  # Non-blocking sleep
+    return "Hello from coroutine"
+
+# Running the coroutine
+asyncio.run(my_function())
+```
+
+- `asyncio.run()`: タスクを実行するためのメイン関数
+- `async def`: タスクを定義するためのキーワード
+- `await`: タスクを実行するためのキーワ
+- `asyncio.sleep()`: タスクを実行するための非同期関数, `time.sleep()` はブロッキング関数ので、タスクを実行するためには `asyncio.sleep()` を使用する必要があります。
+
