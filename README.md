@@ -137,6 +137,7 @@
     - [Basic Usage](#basic-usage)
     - [event\_Loop](#event_loop)
     - [Task](#task)
+  - [Future](#future)
 
 
 
@@ -3349,10 +3350,12 @@ asyncio.run(my_function())
 ```python
 loop = asyncio.get_event_loop()
 loop.run_until_complete(my_function())
+loop.run_in_executor(None, sync_func, *args)
 ```
 
 - `asyncio.get_event_loop()` は、現在のスレッドで実行されているイベントループを取得する、もし存在しなければ新たに作成する。
-- `loop.run_until_complete(my_function())` は、`my_function()` を実行し、その結果を待つ。
+- `loop.run_until_complete(my_function())` は、`my_function()` を実行し、その結果を待つ。<font color="red">**注意**: `my_function`は非同期関数でなければならない。</font>
+- `loop.run_in_executor(None, sync_func, *args)` は、`sync_func` を実行し、その結果を待つ。<font color="red">**注意**: `sync_func`は同期関数でなければならない。</font>
 
 ### Task
 
@@ -3427,4 +3430,26 @@ __main__:my_function:11 - id[6]: Goodbye from my_function
 __main__:main:33 - id:4 is done
 __main__:main:33 - id:5 is done
 __main__:main:33 - id:6 is done
+```
+
+## Future
+
+> A `Future` is a special low-level object that represents an eventual result of an asynchronous operation.
+
+つまり、`Future` は非同期操作の結果を表す特殊な低レベルオブジェクトである。
+
+
+```python
+loop = asyncio.get_running_loop()
+logger.debug(f"loop == _LOOP: {loop == _LOOP}")  # False
+
+fut = loop.create_future()
+fut.set_result("done")
+result = await fut
+logger.debug(result)
+
+fut = loop.run_in_executor(None, sync_func, 1)
+logger.debug(f"fut: {fut}")
+result = await fut
+logger.debug(result)
 ```
