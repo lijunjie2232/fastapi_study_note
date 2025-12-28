@@ -135,6 +135,7 @@
   - [Asyncio](#asyncio)
     - [主要概念](#主要概念)
     - [Basic Usage](#basic-usage)
+    - [event\_Loop](#event_loop)
 
 
 
@@ -3339,4 +3340,16 @@ asyncio.run(my_function())
 - `async def`: タスクを定義するためのキーワード
 - `await`: タスクを実行するためのキーワ
 - `asyncio.sleep()`: タスクを実行するための非同期関数, `time.sleep()` はブロッキング関数ので、タスクを実行するためには `asyncio.sleep()` を使用する必要があります。
+
+### event_Loop
+
+`event_Loop` は、複数のタスクを並行する管理者である。
+
+```python
+loop = asyncio.get_event_loop()
+loop.run_until_complete(my_function())
+```
+
+- `asyncio.get_event_loop()` は、現在のスレッドで実行されているイベントループを取得する、もし存在しなければ新たに作成する。
+- `loop.run_until_complete(my_function())` は、`my_function()` を実行し、その結果を待つ。
 
