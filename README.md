@@ -136,6 +136,7 @@
     - [主要概念](#主要概念)
     - [Basic Usage](#basic-usage)
     - [event\_Loop](#event_loop)
+    - [Task](#task)
 
 
 
@@ -3353,3 +3354,77 @@ loop.run_until_complete(my_function())
 - `asyncio.get_event_loop()` は、現在のスレッドで実行されているイベントループを取得する、もし存在しなければ新たに作成する。
 - `loop.run_until_complete(my_function())` は、`my_function()` を実行し、その結果を待つ。
 
+### Task
+
+> Tasks are used to schedule coroutines concurrently.
+
+> When a coroutine is wrapped into a `Task` with function `asyncio.create_task()`, it is executed asynchronously on the event loop, scheduled to run soon.
+
+```python
+import asyncio
+from loguru import logger
+
+
+_LOOP = asyncio.get_event_loop()
+
+
+async def my_function(id=0):
+    logger.debug(f"id[{id}]: Hello from my_function")
+    await asyncio.sleep(1)
+    logger.debug(f"id[{id}]: Goodbye from my_function")
+    return f"id:{id} is done"
+
+
+async def main():
+
+    await my_function(2)
+
+    task = asyncio.create_task(my_function(3))  # python 3.7+
+
+    # await asyncio.sleep(2)
+
+    await task
+
+    task_list = [asyncio.create_task(my_function(i)) for i in range(4, 7)]
+    done, pedding = await asyncio.wait(task_list, timeout=10)
+    for task in done:
+        logger.debug(task.result())
+
+    task_list = [asyncio.create_task(my_function(i)) for i in range(4, 7)]
+    results = await asyncio.gather(*task_list)
+    for result in results:
+        logger.debug(result)
+
+
+if __name__ == "__main__":
+    _LOOP.run_until_complete(my_function(1))
+    asyncio.run(main())
+```
+
+result:
+```shell
+__main__:my_function:9 - id[1]: Hello from my_function
+__main__:my_function:11 - id[1]: Goodbye from my_function
+__main__:my_function:9 - id[2]: Hello from my_function
+__main__:my_function:11 - id[2]: Goodbye from my_function
+__main__:my_function:9 - id[3]: Hello from my_function
+__main__:my_function:11 - id[3]: Goodbye from my_function
+__main__:my_function:9 - id[4]: Hello from my_function
+__main__:my_function:9 - id[5]: Hello from my_function
+__main__:my_function:9 - id[6]: Hello from my_function
+__main__:my_function:11 - id[4]: Goodbye from my_function
+__main__:my_function:11 - id[5]: Goodbye from my_function
+__main__:my_function:11 - id[6]: Goodbye from my_function
+__main__:main:28 - id:4 is done
+__main__:main:28 - id:6 is done
+__main__:main:28 - id:5 is done
+__main__:my_function:9 - id[4]: Hello from my_function
+__main__:my_function:9 - id[5]: Hello from my_function
+__main__:my_function:9 - id[6]: Hello from my_function
+__main__:my_function:11 - id[4]: Goodbye from my_function
+__main__:my_function:11 - id[5]: Goodbye from my_function
+__main__:my_function:11 - id[6]: Goodbye from my_function
+__main__:main:33 - id:4 is done
+__main__:main:33 - id:5 is done
+__main__:main:33 - id:6 is done
+```
